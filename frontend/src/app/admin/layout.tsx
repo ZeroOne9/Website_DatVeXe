@@ -26,6 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { label: "Quản lý Booking", href: "/admin/bookings", icon: "🎟️" },
     { label: "Quản lý Chuyến xe", href: "/admin/trips", icon: "🚌" },
     { label: "Quản lý Tuyến xe", href: "/admin/routes", icon: "🛣️" },
+    { label: "Duyệt Hồ sơ", href: "/admin/partner-applications", icon: "📑" },
     { label: "Quản lý Nhà xe", href: "/admin/bus-companies", icon: "🏢" },
     { label: "Quản lý Xe & Ghế", href: "/admin/vehicles", icon: "🚐" },
   ];

@@ -7,6 +7,7 @@ import { cancelBooking } from "@/modules/bookings/booking.service";
 
 import { requireAdmin } from "./admin.auth";
 import {
+  approveAdminPartnerApplication,
   createAdminBusCompany,
   createAdminLocation,
   createAdminRoute,
@@ -15,10 +16,12 @@ import {
   createAdminVehicleSeat,
   listAdminBusCompanies,
   listAdminLocations,
+  listAdminPartnerApplications,
   listAdminRoutes,
   listAdminTrips,
   listAdminVehicleSeats,
   listAdminVehicles,
+  rejectAdminPartnerApplication,
   updateAdminRouteStatus,
   updateAdminTripStatus,
   updateAdminVehicleStatus,
@@ -33,6 +36,7 @@ import {
   createTripSchema,
   createVehicleSchema,
   idParamSchema,
+  listPartnerApplicationsQuerySchema,
   updateRouteStatusSchema,
   updateTripStatusSchema,
   updateVehicleStatusSchema,
@@ -153,6 +157,68 @@ export async function createAdminBusCompanyController(request: NextRequest) {
     return successResponse({ busCompany }, { status: 201, message: "Tao nha xe thanh cong." });
   } catch (error) {
     return handleApiError(error, "Khong the tao nha xe.");
+  }
+}
+
+export async function listAdminPartnerApplicationsController(request: NextRequest) {
+  const parsedQuery = listPartnerApplicationsQuerySchema.safeParse({
+    status: request.nextUrl.searchParams.get("status") ?? undefined,
+  });
+
+  if (!parsedQuery.success) {
+    return validationErrorResponse(parsedQuery.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const applications = await listAdminPartnerApplications(parsedQuery.data);
+
+    return successResponse(
+      { applications },
+      { message: "Lay danh sach ho so dang ky nha xe thanh cong." },
+    );
+  } catch (error) {
+    return handleApiError(error, "Khong the lay danh sach ho so dang ky nha xe.");
+  }
+}
+
+export async function approveAdminPartnerApplicationController(
+  request: NextRequest,
+  context: IdRouteContext,
+) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const result = await approveAdminPartnerApplication(parsedParams.data.id);
+
+    return successResponse(result, { message: "Duyet ho so dang ky nha xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the duyet ho so dang ky nha xe.");
+  }
+}
+
+export async function rejectAdminPartnerApplicationController(
+  request: NextRequest,
+  context: IdRouteContext,
+) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const application = await rejectAdminPartnerApplication(parsedParams.data.id);
+
+    return successResponse({ application }, { message: "Tu choi ho so dang ky nha xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the tu choi ho so dang ky nha xe.");
   }
 }
 

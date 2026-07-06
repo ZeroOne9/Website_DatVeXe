@@ -1,4 +1,4 @@
-import { RouteStatus, SeatType, TripStatus, VehicleStatus } from "@prisma/client";
+import { PartnerApplicationStatus, RouteStatus, SeatType, TripStatus, VehicleStatus } from "@prisma/client";
 import { z } from "zod";
 
 const idSchema = z.coerce
@@ -131,6 +131,10 @@ export const updateTripStatusSchema = z.object({
   status: z.nativeEnum(TripStatus),
 });
 
+export const listPartnerApplicationsQuerySchema = z.object({
+  status: z.nativeEnum(PartnerApplicationStatus).optional(),
+});
+
 export type CreateLocationInput = z.infer<typeof createLocationSchema>;
 export type CreateRouteInput = z.infer<typeof createRouteSchema>;
 export type CreateTripInput = z.infer<typeof createTripSchema>;
@@ -142,3 +146,4 @@ export type IdParamInput = z.infer<typeof idParamSchema>;
 export type UpdateRouteStatusInput = z.infer<typeof updateRouteStatusSchema>;
 export type UpdateVehicleStatusInput = z.infer<typeof updateVehicleStatusSchema>;
 export type UpdateTripStatusInput = z.infer<typeof updateTripStatusSchema>;
+export type ListPartnerApplicationsQueryInput = z.infer<typeof listPartnerApplicationsQuerySchema>;

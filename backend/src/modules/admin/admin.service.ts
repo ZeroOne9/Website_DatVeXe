@@ -10,10 +10,26 @@ import type {
   CreateSeatInput,
   CreateTripInput,
   CreateVehicleInput,
+  ListPartnerApplicationsQueryInput,
   UpdateRouteStatusInput,
   UpdateTripStatusInput,
   UpdateVehicleStatusInput,
 } from "./admin.validator";
+
+const partnerApplicationPublicSelect = {
+  id: true,
+  companyName: true,
+  contactName: true,
+  phone: true,
+  email: true,
+  accountEmail: true,
+  address: true,
+  description: true,
+  status: true,
+  reviewedAt: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 export function listAdminLocations() {
   return prisma.location.findMany({
@@ -174,6 +190,139 @@ export function listAdminBusCompanies() {
         },
       },
     },
+  });
+}
+
+export function listAdminPartnerApplications(query: ListPartnerApplicationsQueryInput = {}) {
+  return prisma.partnerApplication.findMany({
+    where: query.status ? { status: query.status } : undefined,
+    select: partnerApplicationPublicSelect,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function approveAdminPartnerApplication(applicationId: number) {
+  return prisma.$transaction(async (tx) => {
+    const application = await tx.partnerApplication.findUnique({
+      where: { id: applicationId },
+      select: {
+        id: true,
+        companyName: true,
+        contactName: true,
+        phone: true,
+        email: true,
+        accountEmail: true,
+        passwordHash: true,
+        address: true,
+        description: true,
+        status: true,
+      },
+    });
+
+    if (!application) {
+      throw new ApiError("Ho so dang ky nha xe khong ton tai.", 404);
+    }
+
+    if (application.status !== "pending") {
+      throw new ApiError("Chi co the duyet ho so dang cho duyet.", 409);
+    }
+
+    if (!application.accountEmail || !application.passwordHash) {
+      throw new ApiError("Ho so chua co thong tin tai khoan dang nhap.", 409);
+    }
+
+    const [existingBusCompany, existingUser] = await Promise.all([
+      tx.busCompany.findUnique({
+        where: { name: application.companyName },
+        select: { id: true },
+      }),
+      tx.user.findUnique({
+        where: { email: application.accountEmail },
+        select: { id: true },
+      }),
+    ]);
+
+    if (existingBusCompany) {
+      throw new ApiError("Nha xe nay da ton tai trong he thong.", 409);
+    }
+
+    if (existingUser) {
+      throw new ApiError("Email dang nhap da duoc su dung.", 409);
+    }
+
+    const busCompany = await tx.busCompany.create({
+      data: {
+        name: application.companyName,
+        phone: application.phone,
+        email: application.email,
+        address: application.address,
+        description: application.description,
+      },
+    });
+
+    const partnerUser = await tx.user.create({
+      data: {
+        fullName: application.contactName,
+        email: application.accountEmail,
+        passwordHash: application.passwordHash,
+        role: "partner",
+      },
+      select: {
+        id: true,
+        fullName: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    await tx.busCompanyUser.create({
+      data: {
+        userId: partnerUser.id,
+        busCompanyId: busCompany.id,
+        role: "owner",
+      },
+    });
+
+    const updatedApplication = await tx.partnerApplication.update({
+      where: { id: applicationId },
+      data: {
+        status: "approved",
+        reviewedAt: new Date(),
+      },
+      select: partnerApplicationPublicSelect,
+    });
+
+    return { application: updatedApplication, busCompany, partnerUser };
+  });
+}
+
+export async function rejectAdminPartnerApplication(applicationId: number) {
+  const application = await prisma.partnerApplication.findUnique({
+    where: { id: applicationId },
+    select: { id: true, status: true },
+  });
+
+  if (!application) {
+    throw new ApiError("Ho so dang ky nha xe khong ton tai.", 404);
+  }
+
+  if (application.status !== "pending") {
+    throw new ApiError("Chi co the tu choi ho so dang cho duyet.", 409);
+  }
+
+  return prisma.partnerApplication.update({
+    where: { id: applicationId },
+    data: {
+      status: "rejected",
+      reviewedAt: new Date(),
+    },
+    select: partnerApplicationPublicSelect,
   });
 }
 

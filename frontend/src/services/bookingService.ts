@@ -2,8 +2,14 @@ import { apiClient } from "@/services/apiClient";
 import type { BookingDetail, CreateBookingResult } from "@/services/types";
 
 export type CreateBookingPayload = {
-  tripId: number;
-  seatIds: number[];
+  tripType?: "one_way" | "round_trip";
+  tripId?: number;
+  seatIds?: number[];
+  legs?: Array<{
+    legType: "outbound" | "return";
+    tripId: number;
+    seatIds: number[];
+  }>;
   passengerName: string;
   passengerPhone: string;
   passengerEmail?: string;

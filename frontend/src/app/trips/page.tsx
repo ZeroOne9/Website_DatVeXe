@@ -146,18 +146,45 @@ function TripCard({
   isExpanded,
   onToggle,
   searchParams,
+  isReturnSelection,
 }: {
   trip: TripSearchItem;
   isExpanded: boolean;
   onToggle: () => void;
   searchParams: string;
+  isReturnSelection: boolean;
 }) {
   const router = useRouter();
 
   function handleContinue(seatIds: number[]) {
     const q = new URLSearchParams(searchParams);
+
+    if (q.get("returnDate") && !isReturnSelection) {
+      const nextQuery = new URLSearchParams({
+        departureLocationId: q.get("destinationLocationId") ?? "",
+        destinationLocationId: q.get("departureLocationId") ?? "",
+        date: q.get("returnDate") ?? "",
+        returnDate: q.get("returnDate") ?? "",
+        selecting: "return",
+        outboundTripId: String(trip.id),
+        outboundSeatIds: seatIds.join(","),
+      });
+
+      router.push(`/trips?${nextQuery.toString()}`);
+      return;
+    }
+
+    if (isReturnSelection) {
+      q.set("returnTripId", String(trip.id));
+      q.set("returnSeatIds", seatIds.join(","));
+      q.set("tripType", "round_trip");
+      router.push(`/checkout?${q.toString()}`);
+      return;
+    }
+
     q.set("tripId", String(trip.id));
     q.set("seatIds", seatIds.join(","));
+    q.set("tripType", "one_way");
     router.push(`/checkout?${q.toString()}`);
   }
 
@@ -258,9 +285,12 @@ function TripsContent() {
       destinationLocationId: searchParams.get("destinationLocationId") ?? "",
       date: searchParams.get("date") ?? "",
       returnDate: searchParams.get("returnDate") ?? "",
+      selecting: searchParams.get("selecting") ?? "outbound",
     }),
     [searchParams]
   );
+
+  const isReturnSelection = params.selecting === "return";
 
   useEffect(() => {
     if (!params.departureLocationId || !params.destinationLocationId || !params.date) {
@@ -285,8 +315,8 @@ function TripsContent() {
         <div>
           <h1 style={{ fontSize: 24, margin: 0 }}>Kết quả tìm kiếm</h1>
           <p style={{ color: "var(--muted)", margin: "6px 0 0" }}>
-            Ngày đi: {params.date || "Chưa chọn"}
-            {params.returnDate ? ` — Ngày về: ${params.returnDate}` : ""}
+            {isReturnSelection ? "Đang chọn chuyến về" : "Đang chọn chuyến đi"}: {params.date || "Chưa chọn"}
+            {params.returnDate && !isReturnSelection ? ` — Có ngày về: ${params.returnDate}` : ""}
           </p>
         </div>
       </div>
@@ -327,6 +357,7 @@ function TripsContent() {
                 isExpanded={expandedId === trip.id}
                 onToggle={() => setExpandedId(expandedId === trip.id ? null : trip.id)}
                 searchParams={searchParams.toString()}
+                isReturnSelection={isReturnSelection}
               />
             ))}
           </div>

@@ -22,9 +22,17 @@ function LoginContent() {
     setLoading(true);
 
     try {
-      await login(email, password);
+      const user = await login(email, password);
       const redirect = searchParams.get("redirect");
-      router.push(redirect || "/");
+      if (redirect) {
+        router.push(redirect);
+      } else if (user.role === "admin") {
+        router.push("/admin");
+      } else if (user.role === "partner") {
+        router.push("/partner");
+      } else {
+        router.push("/");
+      }
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);

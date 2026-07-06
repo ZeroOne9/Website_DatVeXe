@@ -15,14 +15,23 @@ export function Header() {
 
         <nav className="nav-links" aria-label="Điều hướng chính">
           <Link href="/tickets/lookup">Tra cứu vé</Link>
-          <Link href="#">Mở bán vé</Link>
-          <Link href="#">Trở thành đối tác</Link>
+          <Link href="/partners/apply">Mở bán vé</Link>
         </nav>
 
         <div className="auth-links">
           {loading ? null : user ? (
             <>
               <Link href="/account/tickets" style={{ marginRight: 16, fontWeight: 500, color: 'white', textDecoration: 'none' }}>Vé của tôi</Link>
+              {user.role === "partner" && (
+                <Link href="/partner" style={{ marginRight: 16, fontWeight: 500, color: 'white', textDecoration: 'none' }}>
+                  Khu nhà xe
+                </Link>
+              )}
+              {user.role === "admin" && (
+                <Link href="/admin" style={{ marginRight: 16, fontWeight: 500, color: 'white', textDecoration: 'none' }}>
+                  Admin
+                </Link>
+              )}
               <span style={{ fontSize: 14, marginRight: 16 }}>Xin chào, <strong>{user.fullName}</strong></span>
               <button className="button outline" onClick={logout} type="button">
                 Đăng xuất

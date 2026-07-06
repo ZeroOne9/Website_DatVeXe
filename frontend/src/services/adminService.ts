@@ -68,5 +68,18 @@ export const adminService = {
 
   getDashboardStats() {
     return apiClient.get<{ stats: any }>("/api/admin/dashboard");
+  },
+
+  getPartnerApplications(status?: string) {
+    const query = status ? `?status=${status}` : "";
+    return apiClient.get<{ applications: any[] }>(`/api/admin/partner-applications${query}`);
+  },
+
+  approvePartnerApplication(id: number) {
+    return apiClient.patch<{ application: any; busCompany: any }>(`/api/admin/partner-applications/${id}/approve`);
+  },
+
+  rejectPartnerApplication(id: number) {
+    return apiClient.patch<{ application: any }>(`/api/admin/partner-applications/${id}/reject`);
   }
 };

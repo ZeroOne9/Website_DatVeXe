@@ -7,7 +7,7 @@ import type { UserInfo } from "@/services/types";
 type AuthState = {
   user: UserInfo | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<UserInfo>;
   register: (fullName: string, email: string, password: string, phone?: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     const response = await authService.login({ email, password });
     setUser(response.data.user);
+    return response.data.user;
   };
 
   const register = async (fullName: string, email: string, password: string, phone?: string) => {

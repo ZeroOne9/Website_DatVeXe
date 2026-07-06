@@ -73,6 +73,7 @@ export type SeatItem = {
 export type BookingDetail = {
   id: number;
   bookingCode: string;
+  tripType: "one_way" | "round_trip";
   passengerName: string;
   passengerPhone: string;
   passengerEmail: string | null;
@@ -92,6 +93,7 @@ export type CreateBookingResult = {
 
 export type BookingSeatDetail = {
   id: number;
+  legType: "outbound" | "return";
   fareVnd: number;
   trip: TripDetailItem;
   seat: Omit<SeatItem, "isAvailable" | "bookingStatus">;
@@ -117,7 +119,7 @@ export type UserInfo = {
   fullName: string;
   email: string;
   phone: string | null;
-  role: "passenger" | "admin";
+  role: "passenger" | "admin" | "partner";
   status: "active" | "locked";
   createdAt: string;
   updatedAt: string;

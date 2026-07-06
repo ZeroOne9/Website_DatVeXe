@@ -23,13 +23,19 @@ Password: 123456
 Ngay demo:
 
 ```text
-29/06/2026
+13/07/2026
 ```
 
 Tuyen demo:
 
 ```text
 Ben xe Mien Dong -> Ben xe Da Lat
+```
+
+Ngay ve demo cho ve khu hoi:
+
+```text
+14/07/2026
 ```
 
 Backend:
@@ -284,7 +290,7 @@ Noi:
 Man hinh nay hien thi danh sach chuyen xe, bao gom tuyen duong, xe, gio khoi hanh, gia ve, so ve da ban va trang thai chuyen.
 ```
 
-Chi vao chuyen ngay `29/06/2026`, tuyen:
+Chi vao chuyen ngay `13/07/2026`, tuyen:
 
 ```text
 Ben xe Mien Dong -> Ben xe Da Lat
@@ -319,7 +325,7 @@ Tim chuyen:
 ```text
 Diem di: Ben xe Mien Dong
 Diem den: Ben xe Da Lat
-Ngay di: 29/06/2026
+Ngay di: 13/07/2026
 ```
 
 Noi:
@@ -394,13 +400,56 @@ Noi:
 Booking moi da xuat hien trong danh sach quan tri. Admin co the kiem tra thong tin khach hang, tuyen xe, so ghe, tong tien va trang thai thanh toan.
 ```
 
-## 5. Cau chot demo
+## 5. Kich ban demo ve khu hoi
+
+Muc tieu: cho thay mot booking co the gom ca chieu di va chieu ve.
+
+Mo frontend:
 
 ```text
-Nhu vay he thong da hoan thanh cac nghiep vu loi: admin quan ly nha xe, xe va ghe, tuyen xe, chuyen xe, booking; hanh khach tim chuyen, chon nhieu ghe, dat ve, thanh toan mo phong va nhan ma ve.
+http://localhost:3001
 ```
 
-## 6. Neu can seed lai du lieu
+Tim chuyen:
+
+```text
+Diem di: Ben xe Mien Dong
+Diem den: Ben xe Da Lat
+Ngay di: 13/07/2026
+Ngay ve: 14/07/2026
+```
+
+Thao tac:
+
+```text
+1. Bam Tim chuyen.
+2. O danh sach chieu di, chon chuyen va chon 1-2 ghe.
+3. He thong tu chuyen sang danh sach chieu ve Da Lat -> Ben xe Mien Dong.
+4. Chon chuyen ve va chon ghe.
+5. Sang checkout, kiem tra tom tat co ca Chieu di va Chieu ve.
+6. Bam Thanh toan de tao booking khu hoi.
+```
+
+Noi khi demo:
+
+```text
+Voi ve khu hoi, backend luu mot Booking duy nhat, nhung cac ghe duoc tach theo legType: outbound cho chieu di va return cho chieu ve. Cach nay giup tra cuu, huy ve va thong ke van di theo mot ma booking chung.
+```
+
+Du lieu mau da co san:
+
+```text
+Chieu di: Ben xe Mien Dong -> Ben xe Da Lat, 13/07/2026
+Chieu ve: Ben xe Da Lat -> Ben xe Mien Dong, 14/07/2026
+```
+
+## 6. Cau chot demo
+
+```text
+Nhu vay he thong da hoan thanh cac nghiep vu loi: admin quan ly nha xe, xe va ghe, tuyen xe, chuyen xe, booking; hanh khach tim chuyen, chon nhieu ghe, dat ve mot chieu hoac khu hoi, thanh toan mo phong va nhan ma ve.
+```
+
+## 7. Neu can seed lai du lieu
 
 Chay WAMP/MySQL truoc, sau do chay:
 

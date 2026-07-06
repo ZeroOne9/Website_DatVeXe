@@ -34,6 +34,20 @@ function getActiveSeatHoldWhere() {
   };
 }
 
+function normalizeBookingLegs(input: CreateBookingInput) {
+  if (input.legs?.length) {
+    return input.legs;
+  }
+
+  return [
+    {
+      legType: "outbound" as const,
+      tripId: input.tripId!,
+      seatIds: input.seatIds!,
+    },
+  ];
+}
+
 const tripDetailSelect = {
   id: true,
   departureTime: true,
@@ -78,6 +92,7 @@ const tripDetailSelect = {
 const bookingDetailSelect = {
   id: true,
   bookingCode: true,
+  tripType: true,
   passengerName: true,
   passengerPhone: true,
   passengerEmail: true,
@@ -94,6 +109,7 @@ const bookingDetailSelect = {
     },
     select: {
       id: true,
+      legType: true,
       fareVnd: true,
       trip: {
         select: tripDetailSelect,
@@ -124,71 +140,91 @@ const bookingDetailSelect = {
 
 export async function createBooking(input: CreateBookingInput, user: PublicUser | null) {
   return prisma.$transaction(async (tx) => {
-    const trip = await tx.trip.findUnique({
-      where: { id: input.tripId },
-      select: {
-        id: true,
-        vehicleId: true,
-        priceVnd: true,
-        departureTime: true,
-        status: true,
-      },
-    });
+    const legs = normalizeBookingLegs(input);
+    const tripType = input.tripType ?? (legs.some((leg) => leg.legType === "return") ? "round_trip" : "one_way");
+    const bookingSeatCreates: Array<{
+      legType: "outbound" | "return";
+      tripId: number;
+      seatId: number;
+      fareVnd: number;
+    }> = [];
+    let totalFareVnd = 0;
 
-    if (!trip) {
-      throw new ApiError("Khong tim thay chuyen xe.", 404);
-    }
-
-    if (trip.status !== "scheduled") {
-      throw new ApiError("Chuyen xe khong con nhan dat ve.", 409);
-    }
-
-    if (trip.departureTime <= new Date()) {
-      throw new ApiError("Chuyen xe da qua thoi gian khoi hanh.", 409);
-    }
-
-    const seats = await tx.seat.findMany({
-      where: {
-        id: {
-          in: input.seatIds,
+    for (const leg of legs) {
+      const trip = await tx.trip.findUnique({
+        where: { id: leg.tripId },
+        select: {
+          id: true,
+          vehicleId: true,
+          priceVnd: true,
+          departureTime: true,
+          status: true,
         },
-        vehicleId: trip.vehicleId,
-        isActive: true,
-      },
-      select: {
-        id: true,
-      },
-    });
+      });
 
-    if (seats.length !== input.seatIds.length) {
-      throw new ApiError("Mot hoac nhieu ghe khong ton tai hoac khong thuoc chuyen xe nay.", 404);
-    }
+      if (!trip) {
+        throw new ApiError("Khong tim thay chuyen xe.", 404);
+      }
 
-    const existingBookingSeats = await tx.bookingSeat.findMany({
-      where: {
-        tripId: trip.id,
-        seatId: {
-          in: input.seatIds,
+      if (trip.status !== "scheduled") {
+        throw new ApiError("Chuyen xe khong con nhan dat ve.", 409);
+      }
+
+      if (trip.departureTime <= new Date()) {
+        throw new ApiError("Chuyen xe da qua thoi gian khoi hanh.", 409);
+      }
+
+      const seats = await tx.seat.findMany({
+        where: {
+          id: {
+            in: leg.seatIds,
+          },
+          vehicleId: trip.vehicleId,
+          isActive: true,
         },
-        booking: {
-          ...getActiveSeatHoldWhere(),
+        select: {
+          id: true,
         },
-      },
-      select: {
-        seat: {
-          select: {
-            seatCode: true,
+      });
+
+      if (seats.length !== leg.seatIds.length) {
+        throw new ApiError("Mot hoac nhieu ghe khong ton tai hoac khong thuoc chuyen xe nay.", 404);
+      }
+
+      const existingBookingSeats = await tx.bookingSeat.findMany({
+        where: {
+          tripId: trip.id,
+          seatId: {
+            in: leg.seatIds,
+          },
+          booking: {
+            ...getActiveSeatHoldWhere(),
           },
         },
-      },
-    });
+        select: {
+          seat: {
+            select: {
+              seatCode: true,
+            },
+          },
+        },
+      });
 
-    if (existingBookingSeats.length > 0) {
-      const bookedSeatCodes = existingBookingSeats.map((bookingSeat) => bookingSeat.seat.seatCode).join(", ");
-      throw new ApiError(`Ghe da duoc dat: ${bookedSeatCodes}.`, 409);
+      if (existingBookingSeats.length > 0) {
+        const bookedSeatCodes = existingBookingSeats.map((bookingSeat) => bookingSeat.seat.seatCode).join(", ");
+        throw new ApiError(`Ghe da duoc dat: ${bookedSeatCodes}.`, 409);
+      }
+
+      totalFareVnd += trip.priceVnd * leg.seatIds.length;
+      bookingSeatCreates.push(
+        ...leg.seatIds.map((seatId) => ({
+          legType: leg.legType,
+          tripId: trip.id,
+          seatId,
+          fareVnd: trip.priceVnd,
+        })),
+      );
     }
-
-    const totalFareVnd = trip.priceVnd * input.seatIds.length;
 
     const booking = await tx.booking.create({
       data: {
@@ -198,14 +234,11 @@ export async function createBooking(input: CreateBookingInput, user: PublicUser 
         passengerPhone: input.passengerPhone,
         passengerEmail: input.passengerEmail,
         totalFareVnd,
+        tripType,
         status: "pending",
         expiresAt: addMinutes(new Date(), BOOKING_HOLD_MINUTES),
         bookingSeats: {
-          create: input.seatIds.map((seatId) => ({
-            tripId: trip.id,
-            seatId,
-            fareVnd: trip.priceVnd,
-          })),
+          create: bookingSeatCreates,
         },
       },
       select: {
