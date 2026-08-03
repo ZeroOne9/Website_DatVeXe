@@ -7,7 +7,7 @@ import { hashPassword, verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 
 import type { AuthResult } from "./auth.types";
-import type { LoginInput, RegisterInput } from "./auth.validator";
+import type { ChangePasswordInput, LoginInput, RegisterInput, UpdateMeInput } from "./auth.validator";
 
 export async function registerUser(input: RegisterInput): Promise<AuthResult> {
   const { fullName, email, phone, password } = input;
@@ -105,4 +105,49 @@ export async function getAuthenticatedUser(request: NextRequest) {
   }
 
   return user;
+}
+
+export async function updateAuthenticatedUser(userId: number, input: UpdateMeInput) {
+  try {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: input,
+      select: publicUserSelect,
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ApiError("So dien thoai da duoc su dung.", 409);
+    }
+
+    throw error;
+  }
+}
+
+export async function changeAuthenticatedUserPassword(userId: number, input: ChangePasswordInput) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      passwordHash: true,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError("Tai khoan khong ton tai.", 404);
+  }
+
+  const passwordMatches = await verifyPassword(input.currentPassword, user.passwordHash);
+
+  if (!passwordMatches) {
+    throw new ApiError("Mat khau hien tai khong dung.", 401);
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      passwordHash: await hashPassword(input.newPassword),
+    },
+  });
+
+  return { changed: true };
 }

@@ -22,6 +22,14 @@ export const adminService = {
     return apiClient.patch<{ trip: any }>(`/api/admin/trips/${tripId}`, { status });
   },
 
+  updateTrip(tripId: number, data: any) {
+    return apiClient.patch<{ trip: any }>(`/api/admin/trips/${tripId}`, data);
+  },
+
+  deleteTrip(tripId: number) {
+    return apiClient.delete<{ trip: { id: number } }>(`/api/admin/trips/${tripId}`);
+  },
+
   getRoutes() {
     return apiClient.get<{ routes: any[] }>("/api/admin/routes");
   },
@@ -32,6 +40,14 @@ export const adminService = {
 
   updateRouteStatus(routeId: number, status: string) {
     return apiClient.patch<{ route: any }>(`/api/admin/routes/${routeId}`, { status });
+  },
+
+  updateRoute(routeId: number, data: any) {
+    return apiClient.patch<{ route: any }>(`/api/admin/routes/${routeId}`, data);
+  },
+
+  deleteRoute(routeId: number) {
+    return apiClient.delete<{ route: { id: number } }>(`/api/admin/routes/${routeId}`);
   },
 
   getLocations() {
@@ -48,6 +64,14 @@ export const adminService = {
 
   updateVehicleStatus(vehicleId: number, status: string) {
     return apiClient.patch<{ vehicle: any }>(`/api/admin/vehicles/${vehicleId}`, { status });
+  },
+
+  updateVehicle(vehicleId: number, data: any) {
+    return apiClient.patch<{ vehicle: any }>(`/api/admin/vehicles/${vehicleId}`, data);
+  },
+
+  deleteVehicle(vehicleId: number) {
+    return apiClient.delete<{ vehicle: { id: number } }>(`/api/admin/vehicles/${vehicleId}`);
   },
 
   getBusCompanies() {
@@ -81,5 +105,18 @@ export const adminService = {
 
   rejectPartnerApplication(id: number) {
     return apiClient.patch<{ application: any }>(`/api/admin/partner-applications/${id}/reject`);
+  },
+
+  getUsers(status?: string) {
+    const query = status ? `?status=${status}` : "";
+    return apiClient.get<{ users: any[] }>(`/api/admin/users${query}`);
+  },
+
+  updateUser(userId: number, data: any) {
+    return apiClient.patch<{ user: any }>(`/api/admin/users/${userId}`, data);
+  },
+
+  deleteUser(userId: number) {
+    return apiClient.delete<{ user: { id: number } }>(`/api/admin/users/${userId}`);
   }
 };

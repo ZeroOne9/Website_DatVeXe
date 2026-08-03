@@ -80,4 +80,14 @@ export const apiClient = {
 
     return parseResponse<T>(response);
   },
+
+  async delete<T>(path: string) {
+    const response = await fetch(path, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+    });
+
+    return parseResponse<T>(response);
+  },
 };

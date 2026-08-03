@@ -14,17 +14,25 @@ import {
   createAdminTrip,
   createAdminVehicle,
   createAdminVehicleSeat,
+  deleteAdminRoute,
+  deleteAdminTrip,
+  deleteAdminUser,
+  deleteAdminVehicle,
   listAdminBusCompanies,
   listAdminLocations,
   listAdminPartnerApplications,
   listAdminRoutes,
   listAdminTrips,
+  listAdminUsers,
   listAdminVehicleSeats,
   listAdminVehicles,
   rejectAdminPartnerApplication,
+  updateAdminRoute,
   updateAdminRouteStatus,
+  updateAdminTrip,
   updateAdminTripStatus,
-  updateAdminVehicleStatus,
+  updateAdminUser,
+  updateAdminVehicle,
   listAdminBookings,
   getDashboardStats,
 } from "./admin.service";
@@ -36,9 +44,14 @@ import {
   createTripSchema,
   createVehicleSchema,
   idParamSchema,
+  listUsersQuerySchema,
   listPartnerApplicationsQuerySchema,
   updateRouteStatusSchema,
+  updateRouteSchema,
+  updateTripSchema,
   updateTripStatusSchema,
+  updateUserSchema,
+  updateVehicleSchema,
   updateVehicleStatusSchema,
   vehicleIdParamSchema,
 } from "./admin.validator";
@@ -128,6 +141,47 @@ export async function updateAdminRouteStatusController(request: NextRequest, con
     return successResponse({ route }, { message: "Cap nhat tuyen xe thanh cong." });
   } catch (error) {
     return handleApiError(error, "Khong the cap nhat tuyen xe.");
+  }
+}
+
+export async function updateAdminRouteController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsedBody = updateRouteSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return validationErrorResponse(parsedBody.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const route = await updateAdminRoute(parsedParams.data.id, parsedBody.data);
+
+    return successResponse({ route }, { message: "Cap nhat thong tin tuyen xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the cap nhat thong tin tuyen xe.");
+  }
+}
+
+export async function deleteAdminRouteController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const route = await deleteAdminRoute(parsedParams.data.id);
+
+    return successResponse({ route }, { message: "Xoa tuyen xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the xoa tuyen xe.");
   }
 }
 
@@ -267,11 +321,52 @@ export async function updateAdminVehicleStatusController(request: NextRequest, c
 
   try {
     await requireAdmin(request);
-    const vehicle = await updateAdminVehicleStatus(parsedParams.data.id, parsedBody.data);
+    const vehicle = await updateAdminVehicle(parsedParams.data.id, parsedBody.data);
 
     return successResponse({ vehicle }, { message: "Cap nhat xe thanh cong." });
   } catch (error) {
     return handleApiError(error, "Khong the cap nhat xe.");
+  }
+}
+
+export async function updateAdminVehicleController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsedBody = updateVehicleSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return validationErrorResponse(parsedBody.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const vehicle = await updateAdminVehicle(parsedParams.data.id, parsedBody.data);
+
+    return successResponse({ vehicle }, { message: "Cap nhat thong tin xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the cap nhat thong tin xe.");
+  }
+}
+
+export async function deleteAdminVehicleController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const vehicle = await deleteAdminVehicle(parsedParams.data.id);
+
+    return successResponse({ vehicle }, { message: "Xoa xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the xoa xe.");
   }
 }
 
@@ -366,6 +461,107 @@ export async function updateAdminTripStatusController(request: NextRequest, cont
     return successResponse({ trip }, { message: "Cap nhat chuyen xe thanh cong." });
   } catch (error) {
     return handleApiError(error, "Khong the cap nhat chuyen xe.");
+  }
+}
+
+export async function updateAdminTripController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsedBody = updateTripSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return validationErrorResponse(parsedBody.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const trip = await updateAdminTrip(parsedParams.data.id, parsedBody.data);
+
+    return successResponse({ trip }, { message: "Cap nhat thong tin chuyen xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the cap nhat thong tin chuyen xe.");
+  }
+}
+
+export async function deleteAdminTripController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const trip = await deleteAdminTrip(parsedParams.data.id);
+
+    return successResponse({ trip }, { message: "Xoa chuyen xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the xoa chuyen xe.");
+  }
+}
+
+export async function listAdminUsersController(request: NextRequest) {
+  const parsedQuery = listUsersQuerySchema.safeParse({
+    status: request.nextUrl.searchParams.get("status") ?? undefined,
+  });
+
+  if (!parsedQuery.success) {
+    return validationErrorResponse(parsedQuery.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const users = await listAdminUsers(parsedQuery.data);
+
+    return successResponse({ users }, { message: "Lay danh sach khach hang thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the lay danh sach khach hang.");
+  }
+}
+
+export async function updateAdminUserController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsedBody = updateUserSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return validationErrorResponse(parsedBody.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const user = await updateAdminUser(parsedParams.data.id, parsedBody.data);
+
+    return successResponse({ user }, { message: "Cap nhat khach hang thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the cap nhat khach hang.");
+  }
+}
+
+export async function deleteAdminUserController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  try {
+    await requireAdmin(request);
+    const user = await deleteAdminUser(parsedParams.data.id);
+
+    return successResponse({ user }, { message: "Xoa khach hang thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the xoa khach hang.");
   }
 }
 

@@ -4,8 +4,14 @@ import { handleApiError } from "@/lib/api-handler";
 import { clearAuthCookie, setAuthCookie } from "@/lib/auth";
 import { successResponse, validationErrorResponse } from "@/lib/response";
 
-import { getAuthenticatedUser, loginUser, registerUser } from "./auth.service";
-import { loginSchema, registerSchema } from "./auth.validator";
+import {
+  changeAuthenticatedUserPassword,
+  getAuthenticatedUser,
+  loginUser,
+  registerUser,
+  updateAuthenticatedUser,
+} from "./auth.service";
+import { changePasswordSchema, loginSchema, registerSchema, updateMeSchema } from "./auth.validator";
 
 export async function registerController(request: NextRequest) {
   const body = await request.json().catch(() => null);
@@ -55,6 +61,42 @@ export async function getMeController(request: NextRequest) {
     return successResponse({ user }, { message: "Lay thong tin tai khoan thanh cong." });
   } catch (error) {
     return handleApiError(error, "Khong the lay thong tin tai khoan.");
+  }
+}
+
+export async function updateMeController(request: NextRequest) {
+  const body = await request.json().catch(() => null);
+  const parsed = updateMeSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return validationErrorResponse(parsed.error);
+  }
+
+  try {
+    const currentUser = await getAuthenticatedUser(request);
+    const user = await updateAuthenticatedUser(currentUser.id, parsed.data);
+
+    return successResponse({ user }, { message: "Cap nhat thong tin tai khoan thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the cap nhat thong tin tai khoan.");
+  }
+}
+
+export async function changePasswordController(request: NextRequest) {
+  const body = await request.json().catch(() => null);
+  const parsed = changePasswordSchema.safeParse(body);
+
+  if (!parsed.success) {
+    return validationErrorResponse(parsed.error);
+  }
+
+  try {
+    const currentUser = await getAuthenticatedUser(request);
+    const result = await changeAuthenticatedUserPassword(currentUser.id, parsed.data);
+
+    return successResponse(result, { message: "Doi mat khau thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the doi mat khau.");
   }
 }
 

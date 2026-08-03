@@ -13,6 +13,16 @@ export type RegisterPayload = {
   password: string;
 };
 
+export type UpdateMePayload = {
+  fullName?: string;
+  phone?: string | null;
+};
+
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
 export const authService = {
   login(payload: LoginPayload) {
     return apiClient.post<AuthResult>("/api/auth/login", payload);
@@ -24,6 +34,14 @@ export const authService = {
 
   getMe() {
     return apiClient.get<{ user: UserInfo }>("/api/auth/me");
+  },
+
+  updateMe(payload: UpdateMePayload) {
+    return apiClient.patch<{ user: UserInfo }>("/api/auth/me", payload);
+  },
+
+  changePassword(payload: ChangePasswordPayload) {
+    return apiClient.patch<{ changed: true }>("/api/auth/password", payload);
   },
 
   logout() {

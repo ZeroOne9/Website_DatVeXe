@@ -14,6 +14,14 @@ export const partnerDashboardService = {
     return apiClient.post<{ vehicle: any }>("/api/partner/vehicles", data);
   },
 
+  updateVehicle(vehicleId: number, data: any) {
+    return apiClient.patch<{ vehicle: any }>(`/api/partner/vehicles/${vehicleId}`, data);
+  },
+
+  deleteVehicle(vehicleId: number) {
+    return apiClient.delete<{ vehicle: { id: number } }>(`/api/partner/vehicles/${vehicleId}`);
+  },
+
   createVehicleSeat(vehicleId: number, data: any) {
     return apiClient.post<{ seat: any }>(`/api/partner/vehicles/${vehicleId}/seats`, data);
   },

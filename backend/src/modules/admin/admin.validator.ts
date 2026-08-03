@@ -1,4 +1,4 @@
-import { PartnerApplicationStatus, RouteStatus, SeatType, TripStatus, VehicleStatus } from "@prisma/client";
+import { PartnerApplicationStatus, RouteStatus, SeatType, TripStatus, UserStatus, VehicleStatus } from "@prisma/client";
 import { z } from "zod";
 
 const idSchema = z.coerce
@@ -123,13 +123,104 @@ export const updateRouteStatusSchema = z.object({
   status: z.nativeEnum(RouteStatus),
 });
 
+export const updateRouteSchema = z
+  .object({
+    departureLocationId: idSchema.optional(),
+    destinationLocationId: idSchema.optional(),
+    distanceKm: optionalPositiveNumberSchema,
+    estimatedMinutes: optionalPositiveIntSchema,
+    status: z.nativeEnum(RouteStatus).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Can it nhat mot truong de cap nhat.",
+  })
+  .refine(
+    (data) =>
+      data.departureLocationId === undefined ||
+      data.destinationLocationId === undefined ||
+      data.departureLocationId !== data.destinationLocationId,
+    {
+      message: "Diem di va diem den phai khac nhau.",
+      path: ["destinationLocationId"],
+    },
+  );
+
 export const updateVehicleStatusSchema = z.object({
   status: z.nativeEnum(VehicleStatus),
 });
 
+export const updateVehicleSchema = z
+  .object({
+    busCompanyId: idSchema.optional(),
+    licensePlate: z.string().trim().min(5, "Bien so xe khong hop le.").max(20).optional(),
+    name: z.string().trim().min(2, "Ten xe phai co it nhat 2 ky tu.").max(120).optional(),
+    vehicleType: z.string().trim().min(2, "Loai xe phai co it nhat 2 ky tu.").max(80).optional(),
+    capacity: z.coerce
+      .number()
+      .int("So ghe phai la so nguyen.")
+      .positive("So ghe phai lon hon 0.")
+      .optional(),
+    status: z.nativeEnum(VehicleStatus).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Can it nhat mot truong de cap nhat.",
+  });
+
 export const updateTripStatusSchema = z.object({
   status: z.nativeEnum(TripStatus),
 });
+
+export const updateTripSchema = z
+  .object({
+    routeId: idSchema.optional(),
+    vehicleId: idSchema.optional(),
+    departureTime: z.string().trim().datetime("Thoi gian khoi hanh khong hop le.").optional(),
+    arrivalTime: z.preprocess(
+      (value) => (value === "" || value === null ? undefined : value),
+      z.string().trim().datetime("Thoi gian den khong hop le.").optional(),
+    ),
+    priceVnd: z.coerce
+      .number()
+      .int("Gia ve phai la so nguyen.")
+      .positive("Gia ve phai lon hon 0.")
+      .optional(),
+    status: z.nativeEnum(TripStatus).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Can it nhat mot truong de cap nhat.",
+  })
+  .refine(
+    (data) =>
+      !data.departureTime ||
+      !data.arrivalTime ||
+      new Date(data.arrivalTime) > new Date(data.departureTime),
+    {
+      message: "Thoi gian den phai sau thoi gian khoi hanh.",
+      path: ["arrivalTime"],
+    },
+  );
+
+export const listUsersQuerySchema = z.object({
+  status: z.nativeEnum(UserStatus).optional(),
+});
+
+export const updateUserSchema = z
+  .object({
+    fullName: z.string().trim().min(2, "Ho ten phai co it nhat 2 ky tu.").max(120).optional(),
+    phone: z.preprocess(
+      (value) => (value === "" || value === null ? null : value),
+      z
+        .string()
+        .trim()
+        .regex(/^(0|\+84)[0-9]{9,10}$/, "So dien thoai khong hop le.")
+        .nullable()
+        .optional(),
+    ),
+    status: z.nativeEnum(UserStatus).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Can it nhat mot truong de cap nhat.",
+  });
 
 export const listPartnerApplicationsQuerySchema = z.object({
   status: z.nativeEnum(PartnerApplicationStatus).optional(),
@@ -144,6 +235,11 @@ export type VehicleIdParamInput = z.infer<typeof vehicleIdParamSchema>;
 export type CreateSeatInput = z.infer<typeof createSeatSchema>;
 export type IdParamInput = z.infer<typeof idParamSchema>;
 export type UpdateRouteStatusInput = z.infer<typeof updateRouteStatusSchema>;
+export type UpdateRouteInput = z.infer<typeof updateRouteSchema>;
 export type UpdateVehicleStatusInput = z.infer<typeof updateVehicleStatusSchema>;
+export type UpdateVehicleInput = z.infer<typeof updateVehicleSchema>;
 export type UpdateTripStatusInput = z.infer<typeof updateTripStatusSchema>;
+export type UpdateTripInput = z.infer<typeof updateTripSchema>;
+export type ListUsersQueryInput = z.infer<typeof listUsersQuerySchema>;
+export type UpdateUserInput = z.infer<typeof updateUserSchema>;
 export type ListPartnerApplicationsQueryInput = z.infer<typeof listPartnerApplicationsQuerySchema>;

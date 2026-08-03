@@ -154,13 +154,20 @@ export default function HomePage() {
         <h2 style={{marginTop: '40px', marginBottom: '20px'}}>Tuyến đường phổ biến</h2>
         <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '20px'}}>
           {[
-            { from: 'Sài Gòn', to: 'Nha Trang', price: '250.000đ', img: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=400&q=80' },
-            { from: 'Hà Nội', to: 'Sapa', price: '300.000đ', img: 'https://images.unsplash.com/photo-1596568359550-1c64ebf92dd2?auto=format&fit=crop&w=400&q=80' },
-            { from: 'Sài Gòn', to: 'Đà Lạt', price: '300.000đ', img: 'https://images.unsplash.com/photo-1559592413-7cec4d0cae2b?auto=format&fit=crop&w=400&q=80' },
-            { from: 'Sài Gòn', to: 'Vũng Tàu', price: '190.000đ', img: 'https://images.unsplash.com/photo-1563223771-4648b2da5fdf?auto=format&fit=crop&w=400&q=80' }
+            { from: 'Sài Gòn', to: 'Nha Trang', price: '250.000đ', img: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=600&q=80' },
+            { from: 'Hà Nội', to: 'Sapa', price: '300.000đ', img: 'https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=600&q=80' },
+            { from: 'Sài Gòn', to: 'Đà Lạt', price: '300.000đ', img: 'https://images.unsplash.com/photo-1518002054494-3a6f94352e9d?auto=format&fit=crop&w=600&q=80' },
+            { from: 'Sài Gòn', to: 'Vũng Tàu', price: '190.000đ', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80' }
           ].map((route, i) => (
              <div key={i} style={{borderRadius: '8px', overflow: 'hidden', boxShadow: 'var(--shadow)', background: 'white'}}>
-               <img src={route.img} alt={route.to} style={{width: '100%', height: '160px', objectFit: 'cover'}} />
+               <img
+                 src={route.img}
+                 alt={route.to}
+                 style={{width: '100%', height: '160px', objectFit: 'cover', background: 'linear-gradient(135deg, #e8f1fd, #cfe2ff)'}}
+                 onError={(event) => {
+                   event.currentTarget.style.display = "none";
+                 }}
+               />
                <div style={{padding: '16px'}}>
                  <div style={{fontWeight: 700, marginBottom: '8px'}}>{route.from} - {route.to}</div>
                  <div style={{color: 'var(--muted)', fontSize: '14px'}}>Từ {route.price}</div>

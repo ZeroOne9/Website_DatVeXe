@@ -8,17 +8,20 @@ import {
   createPartnerTrip,
   createPartnerVehicle,
   createPartnerVehicleSeat,
+  deletePartnerVehicle,
   getPartnerDashboard,
   listPartnerBookings,
   listPartnerRoutes,
   listPartnerTrips,
   listPartnerVehicles,
+  updatePartnerVehicle,
 } from "./partner.service";
 import {
   createPartnerSeatSchema,
   createPartnerTripSchema,
   createPartnerVehicleSchema,
   idParamSchema,
+  updatePartnerVehicleSchema,
 } from "./partner.validator";
 
 type IdRouteContext = {
@@ -64,6 +67,47 @@ export async function createPartnerVehicleController(request: NextRequest) {
     return successResponse({ vehicle }, { status: 201, message: "Tao xe nha xe thanh cong." });
   } catch (error) {
     return handleApiError(error, "Khong the tao xe nha xe.");
+  }
+}
+
+export async function updatePartnerVehicleController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  const body = await request.json().catch(() => null);
+  const parsedBody = updatePartnerVehicleSchema.safeParse(body);
+
+  if (!parsedBody.success) {
+    return validationErrorResponse(parsedBody.error);
+  }
+
+  try {
+    const scope = await requirePartner(request);
+    const vehicle = await updatePartnerVehicle(scope, parsedParams.data.id, parsedBody.data);
+
+    return successResponse({ vehicle }, { message: "Cap nhat xe nha xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the cap nhat xe nha xe.");
+  }
+}
+
+export async function deletePartnerVehicleController(request: NextRequest, context: IdRouteContext) {
+  const parsedParams = idParamSchema.safeParse(context.params);
+
+  if (!parsedParams.success) {
+    return validationErrorResponse(parsedParams.error);
+  }
+
+  try {
+    const scope = await requirePartner(request);
+    const vehicle = await deletePartnerVehicle(scope, parsedParams.data.id);
+
+    return successResponse({ vehicle }, { message: "Xoa xe nha xe thanh cong." });
+  } catch (error) {
+    return handleApiError(error, "Khong the xoa xe nha xe.");
   }
 }
 

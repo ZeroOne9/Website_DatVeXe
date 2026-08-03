@@ -128,8 +128,8 @@ export default function AdminBookingsPage() {
                     <td>
                       {(b.status === "pending" || b.status === "confirmed") && (
                         <button 
-                          className="button outline danger" 
-                          style={{ height: 28, fontSize: 12, padding: "0 8px", borderColor: "var(--red)", color: "var(--red)" }}
+                          className="button danger" 
+                          style={{ height: 28, minHeight: 28, fontSize: 12, padding: "0 8px" }}
                           onClick={() => handleCancel(b.bookingCode)}
                         >
                           Hủy vé

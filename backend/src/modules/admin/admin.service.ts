@@ -10,9 +10,14 @@ import type {
   CreateSeatInput,
   CreateTripInput,
   CreateVehicleInput,
+  ListUsersQueryInput,
   ListPartnerApplicationsQueryInput,
+  UpdateRouteInput,
   UpdateRouteStatusInput,
+  UpdateTripInput,
   UpdateTripStatusInput,
+  UpdateUserInput,
+  UpdateVehicleInput,
   UpdateVehicleStatusInput,
 } from "./admin.validator";
 
@@ -29,6 +34,41 @@ const partnerApplicationPublicSelect = {
   reviewedAt: true,
   createdAt: true,
   updatedAt: true,
+} as const;
+
+const adminTripInclude = {
+  route: {
+    include: {
+      departureLocation: true,
+      destinationLocation: true,
+    },
+  },
+  vehicle: {
+    include: {
+      busCompany: true,
+    },
+  },
+  _count: {
+    select: {
+      bookingSeats: true,
+    },
+  },
+} as const;
+
+const adminUserSelect = {
+  id: true,
+  fullName: true,
+  email: true,
+  phone: true,
+  role: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+  _count: {
+    select: {
+      bookings: true,
+    },
+  },
 } as const;
 
 export function listAdminLocations() {
@@ -57,6 +97,11 @@ export function listAdminRoutes() {
     include: {
       departureLocation: true,
       destinationLocation: true,
+      _count: {
+        select: {
+          trips: true,
+        },
+      },
     },
   });
 }
@@ -104,24 +149,7 @@ export function listAdminTrips() {
     orderBy: {
       departureTime: "desc",
     },
-    include: {
-      route: {
-        include: {
-          departureLocation: true,
-          destinationLocation: true,
-        },
-      },
-      vehicle: {
-        include: {
-          busCompany: true,
-        },
-      },
-      _count: {
-        select: {
-          bookingSeats: true,
-        },
-      },
-    },
+    include: adminTripInclude,
   });
 }
 
@@ -458,10 +486,16 @@ export async function createAdminVehicleSeat(vehicleId: number, input: CreateSea
 }
 
 export async function updateAdminRouteStatus(routeId: number, input: UpdateRouteStatusInput) {
+  return updateAdminRoute(routeId, input);
+}
+
+export async function updateAdminRoute(routeId: number, input: UpdateRouteInput) {
   const route = await prisma.route.findUnique({
     where: { id: routeId },
     select: {
       id: true,
+      departureLocationId: true,
+      destinationLocationId: true,
       status: true,
       _count: {
         select: {
@@ -473,6 +507,28 @@ export async function updateAdminRouteStatus(routeId: number, input: UpdateRoute
 
   if (!route) {
     throw new ApiError("Tuyen xe khong ton tai.", 404);
+  }
+
+  const departureLocationId = input.departureLocationId ?? route.departureLocationId;
+  const destinationLocationId = input.destinationLocationId ?? route.destinationLocationId;
+
+  if (departureLocationId === destinationLocationId) {
+    throw new ApiError("Diem di va diem den phai khac nhau.", 400);
+  }
+
+  if (input.departureLocationId || input.destinationLocationId) {
+    const locations = await prisma.location.findMany({
+      where: {
+        id: {
+          in: [departureLocationId, destinationLocationId],
+        },
+      },
+      select: { id: true },
+    });
+
+    if (locations.length !== 2) {
+      throw new ApiError("Diem di hoac diem den khong ton tai.", 404);
+    }
   }
 
   if (input.status === "inactive") {
@@ -491,24 +547,68 @@ export async function updateAdminRouteStatus(routeId: number, input: UpdateRoute
     }
   }
 
-  return prisma.route.update({
+  try {
+    return await prisma.route.update({
+      where: { id: routeId },
+      data: input,
+      include: {
+        departureLocation: true,
+        destinationLocation: true,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ApiError("Tuyen xe nay da ton tai.", 409);
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteAdminRoute(routeId: number) {
+  const route = await prisma.route.findUnique({
     where: { id: routeId },
-    data: {
-      status: input.status,
-    },
-    include: {
-      departureLocation: true,
-      destinationLocation: true,
+    select: {
+      id: true,
+      _count: {
+        select: {
+          trips: true,
+        },
+      },
     },
   });
+
+  if (!route) {
+    throw new ApiError("Tuyen xe khong ton tai.", 404);
+  }
+
+  if (route._count.trips > 0) {
+    throw new ApiError("Khong the xoa tuyen xe da co chuyen. Hay chuyen sang trang thai ngung hoat dong.", 409);
+  }
+
+  await prisma.route.delete({
+    where: { id: routeId },
+  });
+
+  return { id: routeId };
 }
 
 export async function updateAdminVehicleStatus(vehicleId: number, input: UpdateVehicleStatusInput) {
+  return updateAdminVehicle(vehicleId, input);
+}
+
+export async function updateAdminVehicle(vehicleId: number, input: UpdateVehicleInput) {
   const vehicle = await prisma.vehicle.findUnique({
     where: { id: vehicleId },
     select: {
       id: true,
       status: true,
+      capacity: true,
+      _count: {
+        select: {
+          seats: true,
+        },
+      },
     },
   });
 
@@ -516,7 +616,22 @@ export async function updateAdminVehicleStatus(vehicleId: number, input: UpdateV
     throw new ApiError("Xe khong ton tai.", 404);
   }
 
-  if (input.status !== "active") {
+  if (input.busCompanyId) {
+    const busCompany = await prisma.busCompany.findUnique({
+      where: { id: input.busCompanyId },
+      select: { id: true },
+    });
+
+    if (!busCompany) {
+      throw new ApiError("Nha xe khong ton tai.", 404);
+    }
+  }
+
+  if (input.capacity && input.capacity < vehicle._count.seats) {
+    throw new ApiError("Suc chua khong duoc nho hon so ghe da tao.", 409);
+  }
+
+  if (input.status && input.status !== "active") {
     const scheduledTrips = await prisma.trip.count({
       where: {
         vehicleId,
@@ -534,9 +649,7 @@ export async function updateAdminVehicleStatus(vehicleId: number, input: UpdateV
 
   return prisma.vehicle.update({
     where: { id: vehicleId },
-    data: {
-      status: input.status,
-    },
+    data: input,
     include: {
       busCompany: true,
       _count: {
@@ -549,13 +662,55 @@ export async function updateAdminVehicleStatus(vehicleId: number, input: UpdateV
   });
 }
 
+export async function deleteAdminVehicle(vehicleId: number) {
+  const vehicle = await prisma.vehicle.findUnique({
+    where: { id: vehicleId },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          trips: true,
+        },
+      },
+    },
+  });
+
+  if (!vehicle) {
+    throw new ApiError("Xe khong ton tai.", 404);
+  }
+
+  if (vehicle._count.trips > 0) {
+    throw new ApiError("Khong the xoa xe da co chuyen xe. Hay chuyen xe sang trang thai ngung hoat dong.", 409);
+  }
+
+  await prisma.vehicle.delete({
+    where: { id: vehicleId },
+  });
+
+  return { id: vehicleId };
+}
+
 export async function updateAdminTripStatus(tripId: number, input: UpdateTripStatusInput) {
+  return updateAdminTrip(tripId, input);
+}
+
+export async function updateAdminTrip(tripId: number, input: UpdateTripInput) {
   return prisma.$transaction(async (tx) => {
     const trip = await tx.trip.findUnique({
       where: { id: tripId },
       select: {
         id: true,
+        routeId: true,
+        vehicleId: true,
+        departureTime: true,
+        arrivalTime: true,
+        priceVnd: true,
         status: true,
+        _count: {
+          select: {
+            bookingSeats: true,
+          },
+        },
       },
     });
 
@@ -563,12 +718,60 @@ export async function updateAdminTripStatus(tripId: number, input: UpdateTripSta
       throw new ApiError("Chuyen xe khong ton tai.", 404);
     }
 
-    if (trip.status === "completed" && input.status !== "completed") {
+    if (trip.status === "completed" && input.status && input.status !== "completed") {
       throw new ApiError("Khong the doi trang thai chuyen xe da hoan thanh.", 409);
     }
 
     if (trip.status === "departed" && input.status === "scheduled") {
       throw new ApiError("Khong the dua chuyen da khoi hanh ve trang thai scheduled.", 409);
+    }
+
+    const changesTripCore =
+      input.routeId !== undefined ||
+      input.vehicleId !== undefined ||
+      input.departureTime !== undefined ||
+      input.arrivalTime !== undefined ||
+      input.priceVnd !== undefined;
+
+    if (trip._count.bookingSeats > 0 && changesTripCore) {
+      throw new ApiError("Chuyen xe da co ve dat. Chi nen cap nhat trang thai hoac tao chuyen moi.", 409);
+    }
+
+    if (input.routeId) {
+      const route = await tx.route.findUnique({
+        where: { id: input.routeId },
+        select: { id: true, status: true },
+      });
+
+      if (!route) {
+        throw new ApiError("Tuyen xe khong ton tai.", 404);
+      }
+
+      if (route.status !== "active") {
+        throw new ApiError("Tuyen xe dang ngung hoat dong.", 409);
+      }
+    }
+
+    if (input.vehicleId) {
+      const vehicle = await tx.vehicle.findUnique({
+        where: { id: input.vehicleId },
+        select: { id: true, status: true },
+      });
+
+      if (!vehicle) {
+        throw new ApiError("Xe khong ton tai.", 404);
+      }
+
+      if (vehicle.status !== "active") {
+        throw new ApiError("Xe khong san sang hoat dong.", 409);
+      }
+    }
+
+    const nextDepartureTime = input.departureTime ? new Date(input.departureTime) : trip.departureTime;
+    const nextArrivalTime = input.arrivalTime ? new Date(input.arrivalTime) : trip.arrivalTime;
+
+    if (nextArrivalTime && nextArrivalTime <= nextDepartureTime) {
+      throw new ApiError("Thoi gian den phai sau thoi gian khoi hanh.", 400);
     }
 
     if (input.status === "cancelled" && trip.status !== "cancelled") {
@@ -605,28 +808,122 @@ export async function updateAdminTripStatus(tripId: number, input: UpdateTripSta
     return tx.trip.update({
       where: { id: tripId },
       data: {
+        routeId: input.routeId,
+        vehicleId: input.vehicleId,
+        departureTime: input.departureTime ? new Date(input.departureTime) : undefined,
+        arrivalTime: input.arrivalTime ? new Date(input.arrivalTime) : undefined,
+        priceVnd: input.priceVnd,
         status: input.status,
       },
-      include: {
-        route: {
-          include: {
-            departureLocation: true,
-            destinationLocation: true,
-          },
-        },
-        vehicle: {
-          include: {
-            busCompany: true,
-          },
-        },
-        _count: {
-          select: {
-            bookingSeats: true,
-          },
-        },
-      },
+      include: adminTripInclude,
     });
   });
+}
+
+export async function deleteAdminTrip(tripId: number) {
+  const trip = await prisma.trip.findUnique({
+    where: { id: tripId },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          bookingSeats: true,
+        },
+      },
+    },
+  });
+
+  if (!trip) {
+    throw new ApiError("Chuyen xe khong ton tai.", 404);
+  }
+
+  if (trip._count.bookingSeats > 0) {
+    throw new ApiError("Khong the xoa chuyen xe da co ve dat. Hay huy chuyen xe.", 409);
+  }
+
+  await prisma.trip.delete({
+    where: { id: tripId },
+  });
+
+  return { id: tripId };
+}
+
+export function listAdminUsers(query: ListUsersQueryInput = {}) {
+  return prisma.user.findMany({
+    where: {
+      role: "passenger",
+      ...(query.status ? { status: query.status } : {}),
+    },
+    select: adminUserSelect,
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+}
+
+export async function updateAdminUser(userId: number, input: UpdateUserInput) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+    },
+  });
+
+  if (!user) {
+    throw new ApiError("Tai khoan khong ton tai.", 404);
+  }
+
+  if (user.role !== "passenger") {
+    throw new ApiError("Chi duoc quan ly tai khoan khach hang o man hinh nay.", 403);
+  }
+
+  try {
+    return await prisma.user.update({
+      where: { id: userId },
+      data: input,
+      select: adminUserSelect,
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ApiError("So dien thoai da duoc su dung.", 409);
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteAdminUser(userId: number) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      role: true,
+      _count: {
+        select: {
+          bookings: true,
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    throw new ApiError("Tai khoan khong ton tai.", 404);
+  }
+
+  if (user.role !== "passenger") {
+    throw new ApiError("Chi duoc xoa tai khoan khach hang o man hinh nay.", 403);
+  }
+
+  if (user._count.bookings > 0) {
+    throw new ApiError("Khach hang da co lich su dat ve. Hay khoa tai khoan thay vi xoa.", 409);
+  }
+
+  await prisma.user.delete({
+    where: { id: userId },
+  });
+
+  return { id: userId };
 }
 
 export function listAdminBookings() {

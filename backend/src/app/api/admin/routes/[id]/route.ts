@@ -1,6 +1,10 @@
-import { updateAdminRouteStatusController } from "@/modules/admin/admin.controller";
+import {
+  deleteAdminRouteController,
+  updateAdminRouteController,
+} from "@/modules/admin/admin.controller";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export const PATCH = updateAdminRouteStatusController;
+export const PATCH = updateAdminRouteController;
+export const DELETE = deleteAdminRouteController;

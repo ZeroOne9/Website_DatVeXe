@@ -21,6 +21,22 @@ export const createPartnerVehicleSchema = z.object({
   status: z.nativeEnum(VehicleStatus).optional(),
 });
 
+export const updatePartnerVehicleSchema = z
+  .object({
+    licensePlate: z.string().trim().min(5, "Bien so xe khong hop le.").max(20).optional(),
+    name: z.string().trim().min(2, "Ten xe phai co it nhat 2 ky tu.").max(120).optional(),
+    vehicleType: z.string().trim().min(2, "Loai xe phai co it nhat 2 ky tu.").max(80).optional(),
+    capacity: z.coerce
+      .number()
+      .int("So ghe phai la so nguyen.")
+      .positive("So ghe phai lon hon 0.")
+      .optional(),
+    status: z.nativeEnum(VehicleStatus).optional(),
+  })
+  .refine((data) => Object.keys(data).length > 0, {
+    message: "Can it nhat mot truong de cap nhat.",
+  });
+
 export const createPartnerSeatSchema = z.object({
   seatCode: z.string().trim().min(1, "Ma ghe khong hop le.").max(20),
   seatType: z.nativeEnum(SeatType).optional(),
@@ -65,5 +81,6 @@ export const createPartnerTripSchema = z
 
 export type IdParamInput = z.infer<typeof idParamSchema>;
 export type CreatePartnerVehicleInput = z.infer<typeof createPartnerVehicleSchema>;
+export type UpdatePartnerVehicleInput = z.infer<typeof updatePartnerVehicleSchema>;
 export type CreatePartnerSeatInput = z.infer<typeof createPartnerSeatSchema>;
 export type CreatePartnerTripInput = z.infer<typeof createPartnerTripSchema>;

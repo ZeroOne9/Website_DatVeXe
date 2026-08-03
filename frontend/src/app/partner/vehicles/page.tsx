@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { partnerDashboardService } from "@/services/partnerDashboardService";
 
@@ -13,17 +13,35 @@ const inputStyle: React.CSSProperties = {
   background: "white",
 };
 
+const statusOptions = [
+  { value: "active", label: "Dang hoat dong" },
+  { value: "maintenance", label: "Dang bao tri" },
+  { value: "inactive", label: "Ngung hoat dong" },
+];
+
+type VehicleForm = {
+  licensePlate: string;
+  name: string;
+  vehicleType: string;
+  capacity: string;
+  status: string;
+};
+
+const emptyVehicleForm: VehicleForm = {
+  licensePlate: "",
+  name: "",
+  vehicleType: "",
+  capacity: "",
+  status: "active",
+};
+
 export default function PartnerVehiclesPage() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingVehicle, setSavingVehicle] = useState(false);
   const [savingSeat, setSavingSeat] = useState(false);
-  const [vehicleForm, setVehicleForm] = useState({
-    licensePlate: "",
-    name: "",
-    vehicleType: "",
-    capacity: "",
-  });
+  const [editingVehicle, setEditingVehicle] = useState<any | null>(null);
+  const [vehicleForm, setVehicleForm] = useState<VehicleForm>(emptyVehicleForm);
   const [seatForm, setSeatForm] = useState({
     vehicleId: "",
     seatCode: "",
@@ -32,6 +50,11 @@ export default function PartnerVehiclesPage() {
     rowNumber: "",
     colNumber: "",
   });
+
+  const editingSeatCount = useMemo(
+    () => editingVehicle?._count?.seats ?? 0,
+    [editingVehicle],
+  );
 
   const loadVehicles = async () => {
     setLoading(true);
@@ -50,7 +73,7 @@ export default function PartnerVehiclesPage() {
     loadVehicles();
   }, []);
 
-  const updateVehicleForm = (field: keyof typeof vehicleForm, value: string) => {
+  const updateVehicleForm = (field: keyof VehicleForm, value: string) => {
     setVehicleForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -58,21 +81,71 @@ export default function PartnerVehiclesPage() {
     setSeatForm((current) => ({ ...current, [field]: value }));
   };
 
+  const openEditForm = (vehicle: any) => {
+    setEditingVehicle(vehicle);
+    setVehicleForm({
+      licensePlate: vehicle.licensePlate || "",
+      name: vehicle.name || "",
+      vehicleType: vehicle.vehicleType || "",
+      capacity: String(vehicle.capacity || ""),
+      status: vehicle.status || "active",
+    });
+  };
+
+  const closeEditForm = () => {
+    setEditingVehicle(null);
+    setVehicleForm(emptyVehicleForm);
+  };
+
   const handleCreateVehicle = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSavingVehicle(true);
     try {
       await partnerDashboardService.createVehicle({
-        licensePlate: vehicleForm.licensePlate,
-        name: vehicleForm.name,
-        vehicleType: vehicleForm.vehicleType,
+        licensePlate: vehicleForm.licensePlate.trim(),
+        name: vehicleForm.name.trim(),
+        vehicleType: vehicleForm.vehicleType.trim(),
         capacity: Number(vehicleForm.capacity),
       });
-      setVehicleForm({ licensePlate: "", name: "", vehicleType: "", capacity: "" });
+      setVehicleForm(emptyVehicleForm);
       await loadVehicles();
       alert("Tao xe thanh cong.");
     } catch (error: any) {
       alert(error.message || "Khong the tao xe.");
+    } finally {
+      setSavingVehicle(false);
+    }
+  };
+
+  const handleUpdateVehicle = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!editingVehicle) return;
+
+    const capacity = Number(vehicleForm.capacity);
+    if (!vehicleForm.licensePlate || !vehicleForm.name || !vehicleForm.vehicleType || !capacity) {
+      alert("Vui long nhap day du thong tin xe.");
+      return;
+    }
+
+    if (capacity < editingSeatCount) {
+      alert(`Suc chua khong duoc nho hon so ghe da tao (${editingSeatCount}).`);
+      return;
+    }
+
+    setSavingVehicle(true);
+    try {
+      await partnerDashboardService.updateVehicle(editingVehicle.id, {
+        licensePlate: vehicleForm.licensePlate.trim(),
+        name: vehicleForm.name.trim(),
+        vehicleType: vehicleForm.vehicleType.trim(),
+        capacity,
+        status: vehicleForm.status,
+      });
+      closeEditForm();
+      await loadVehicles();
+      alert("Cap nhat xe thanh cong.");
+    } catch (error: any) {
+      alert(error.message || "Khong the cap nhat xe.");
     } finally {
       setSavingVehicle(false);
     }
@@ -83,7 +156,7 @@ export default function PartnerVehiclesPage() {
     setSavingSeat(true);
     try {
       await partnerDashboardService.createVehicleSeat(Number(seatForm.vehicleId), {
-        seatCode: seatForm.seatCode,
+        seatCode: seatForm.seatCode.trim(),
         seatType: seatForm.seatType,
         floor: Number(seatForm.floor),
         rowNumber: seatForm.rowNumber ? Number(seatForm.rowNumber) : undefined,
@@ -96,6 +169,36 @@ export default function PartnerVehiclesPage() {
       alert(error.message || "Khong the tao ghe.");
     } finally {
       setSavingSeat(false);
+    }
+  };
+
+  const handleStatusChange = async (vehicle: any, status: string) => {
+    if (vehicle.status === status) return;
+    if (!confirm(`Doi trang thai xe "${vehicle.name}" thanh "${status}"?`)) return;
+
+    try {
+      await partnerDashboardService.updateVehicle(vehicle.id, { status });
+      await loadVehicles();
+    } catch (error: any) {
+      alert(error.message || "Khong the cap nhat trang thai xe.");
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicle: any) => {
+    if (
+      !confirm(
+        `Xoa xe "${vehicle.name}"?\n\nChi xoa duoc xe chua co chuyen xe. Neu xe da co chuyen, hay chuyen sang Ngung hoat dong.`,
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await partnerDashboardService.deleteVehicle(vehicle.id);
+      await loadVehicles();
+      alert("Xoa xe thanh cong.");
+    } catch (error: any) {
+      alert(error.message || "Khong the xoa xe.");
     }
   };
 
@@ -213,6 +316,74 @@ export default function PartnerVehiclesPage() {
         </section>
       </div>
 
+      {editingVehicle && (
+        <section className="card" style={{ marginTop: 20 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 16, marginBottom: 16 }}>
+            <div>
+              <h2 style={{ fontSize: 18, margin: 0 }}>Sua thong tin xe</h2>
+              <div style={{ color: "var(--muted)", fontSize: 14, marginTop: 4 }}>
+                Da tao {editingSeatCount}/{editingVehicle.capacity} ghe
+              </div>
+            </div>
+            <button className="button outline" type="button" onClick={closeEditForm}>
+              Huy
+            </button>
+          </div>
+
+          <form
+            onSubmit={handleUpdateVehicle}
+            style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}
+          >
+            <input
+              required
+              style={inputStyle}
+              value={vehicleForm.name}
+              onChange={(event) => updateVehicleForm("name", event.target.value)}
+              placeholder="Ten xe"
+            />
+            <input
+              required
+              minLength={5}
+              maxLength={20}
+              style={inputStyle}
+              value={vehicleForm.licensePlate}
+              onChange={(event) => updateVehicleForm("licensePlate", event.target.value)}
+              placeholder="Bien so xe"
+            />
+            <input
+              required
+              style={inputStyle}
+              value={vehicleForm.vehicleType}
+              onChange={(event) => updateVehicleForm("vehicleType", event.target.value)}
+              placeholder="Loai xe"
+            />
+            <input
+              required
+              min={editingSeatCount || 1}
+              type="number"
+              style={inputStyle}
+              value={vehicleForm.capacity}
+              onChange={(event) => updateVehicleForm("capacity", event.target.value)}
+              placeholder="Suc chua"
+            />
+            <select
+              style={inputStyle}
+              value={vehicleForm.status}
+              onChange={(event) => updateVehicleForm("status", event.target.value)}
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button className="button primary" type="submit" disabled={savingVehicle}>
+              {savingVehicle ? "Dang luu..." : "Luu thay doi"}
+            </button>
+          </form>
+        </section>
+      )}
+
       <h2 style={{ fontSize: 18, marginTop: 32 }}>Danh sach xe</h2>
       <div className="admin-table-container">
         <table className="admin-table">
@@ -224,22 +395,67 @@ export default function PartnerVehiclesPage() {
               <th>Ghe</th>
               <th>Chuyen</th>
               <th>Trang thai</th>
+              <th>Thao tac</th>
             </tr>
           </thead>
           <tbody>
-            {vehicles.map((vehicle) => (
-              <tr key={vehicle.id}>
-                <td style={{ fontWeight: 700 }}>{vehicle.licensePlate}</td>
-                <td>{vehicle.name}</td>
-                <td>{vehicle.vehicleType}</td>
-                <td>{vehicle._count?.seats ?? 0}/{vehicle.capacity}</td>
-                <td>{vehicle._count?.trips ?? 0}</td>
-                <td>{vehicle.status}</td>
-              </tr>
-            ))}
+            {vehicles.map((vehicle) => {
+              const hasTrips = (vehicle._count?.trips ?? 0) > 0;
+
+              return (
+                <tr key={vehicle.id}>
+                  <td style={{ fontWeight: 700 }}>{vehicle.licensePlate}</td>
+                  <td>{vehicle.name}</td>
+                  <td>{vehicle.vehicleType}</td>
+                  <td>{vehicle._count?.seats ?? 0}/{vehicle.capacity}</td>
+                  <td>{vehicle._count?.trips ?? 0}</td>
+                  <td>
+                    <select
+                      style={{ ...inputStyle, width: 150, minHeight: 32, fontSize: 13 }}
+                      value={vehicle.status}
+                      onChange={(event) => handleStatusChange(vehicle, event.target.value)}
+                    >
+                      {statusOptions.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </td>
+                  <td>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button
+                        className="button outline"
+                        type="button"
+                        style={{ height: 28, fontSize: 12, padding: "0 12px" }}
+                        onClick={() => openEditForm(vehicle)}
+                      >
+                        Sua
+                      </button>
+                      <button
+                        className="button"
+                        type="button"
+                        disabled={hasTrips}
+                        title={hasTrips ? "Xe da co chuyen, chi co the ngung hoat dong." : "Xoa xe"}
+                        onClick={() => handleDeleteVehicle(vehicle)}
+                        style={{
+                          height: 28,
+                          fontSize: 12,
+                          padding: "0 12px",
+                          background: hasTrips ? "#cbd5e1" : "#dc2626",
+                          color: "white",
+                        }}
+                      >
+                        Xoa
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
             {vehicles.length === 0 && (
               <tr>
-                <td colSpan={6} style={{ textAlign: "center", padding: 32 }}>
+                <td colSpan={7} style={{ textAlign: "center", padding: 32 }}>
                   Chua co xe nao
                 </td>
               </tr>

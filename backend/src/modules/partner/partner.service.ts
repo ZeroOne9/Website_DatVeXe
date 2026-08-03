@@ -5,6 +5,7 @@ import type {
   CreatePartnerSeatInput,
   CreatePartnerTripInput,
   CreatePartnerVehicleInput,
+  UpdatePartnerVehicleInput,
 } from "./partner.validator";
 
 type PartnerScope = {
@@ -159,6 +160,114 @@ export async function createPartnerVehicle(scope: PartnerScope, input: CreatePar
 
     throw error;
   }
+}
+
+export async function updatePartnerVehicle(
+  scope: PartnerScope,
+  vehicleId: number,
+  input: UpdatePartnerVehicleInput,
+) {
+  const vehicle = await prisma.vehicle.findFirst({
+    where: {
+      id: vehicleId,
+      busCompanyId: {
+        in: scope.busCompanyIds,
+      },
+    },
+    select: {
+      id: true,
+      status: true,
+      _count: {
+        select: {
+          seats: true,
+        },
+      },
+    },
+  });
+
+  if (!vehicle) {
+    throw new ApiError("Xe khong ton tai hoac khong thuoc nha xe cua ban.", 404);
+  }
+
+  if (input.capacity && input.capacity < vehicle._count.seats) {
+    throw new ApiError("Suc chua khong duoc nho hon so ghe da tao.", 409);
+  }
+
+  if (input.status && input.status !== "active") {
+    const scheduledTrips = await prisma.trip.count({
+      where: {
+        vehicleId,
+        status: "scheduled",
+        departureTime: {
+          gt: new Date(),
+        },
+      },
+    });
+
+    if (scheduledTrips > 0) {
+      throw new ApiError("Khong the doi trang thai xe khi con chuyen sap khoi hanh.", 409);
+    }
+  }
+
+  try {
+    return await prisma.vehicle.update({
+      where: { id: vehicleId },
+      data: input,
+      include: {
+        busCompany: true,
+        _count: {
+          select: {
+            seats: true,
+            trips: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
+      throw new ApiError("Bien so xe da ton tai.", 409);
+    }
+
+    throw error;
+  }
+}
+
+export async function deletePartnerVehicle(scope: PartnerScope, vehicleId: number) {
+  const vehicle = await prisma.vehicle.findFirst({
+    where: {
+      id: vehicleId,
+      busCompanyId: {
+        in: scope.busCompanyIds,
+      },
+    },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          trips: true,
+        },
+      },
+    },
+  });
+
+  if (!vehicle) {
+    throw new ApiError("Xe khong ton tai hoac khong thuoc nha xe cua ban.", 404);
+  }
+
+  if (vehicle._count.trips > 0) {
+    throw new ApiError("Khong the xoa xe da co chuyen xe. Hay chuyen xe sang trang thai ngung hoat dong.", 409);
+  }
+
+  await prisma.vehicle.delete({
+    where: { id: vehicleId },
+  });
+
+  return { id: vehicleId };
 }
 
 export async function createPartnerVehicleSeat(
