@@ -10,7 +10,7 @@ Website_HoTroDatVeXe-master/
 
 ## Backend
 
-Backend nam trong `backend/`, dung Next.js Route Handlers, Prisma MySQL, JWT, bcrypt va Zod.
+Backend nam trong `backend/`, dung NodeJS + ExpressJS, Prisma MySQL, JWT, bcrypt va Zod.
 
 ```bash
 cd backend
@@ -45,8 +45,8 @@ http://localhost:3001
 
 ## Ghi chu
 
-- `backend/src/app/api/**/route.ts`: router layer.
-- `backend/src/modules/**/*.controller.ts`: controller layer.
+- `backend/src/server.ts`: Express server va router layer.
 - `backend/src/modules/**/*.service.ts`: service layer.
+- `backend/src/modules/**/*.validator.ts`: validation layer voi Zod.
 - `backend/prisma/schema.prisma`: model/database schema.
 - `frontend/src/services`: API client va services cho UI.

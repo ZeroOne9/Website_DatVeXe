@@ -1,26 +1,29 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
-    "allowJs": true,
-    "skipLibCheck": true,
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "moduleResolution": "node",
     "strict": true,
-    "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "types": ["node", "express"],
+    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "frontend", ".next"]
+  "include": [
+    "src/server.ts",
+    "src/lib/auth.ts",
+    "src/lib/errors.ts",
+    "src/lib/password.ts",
+    "src/lib/prisma.ts",
+    "src/modules/**/*.service.ts",
+    "src/modules/**/*.validator.ts",
+    "src/modules/**/*.types.ts"
+  ],
+  "exclude": ["node_modules", "src/app", "**/*.controller.ts", "**/*.auth.ts"]
 }

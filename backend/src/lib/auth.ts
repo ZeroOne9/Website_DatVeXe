@@ -1,6 +1,6 @@
 import type { UserRole, UserStatus } from "@prisma/client";
+import type { Request, Response } from "express";
 import jwt, { type JwtPayload } from "jsonwebtoken";
-import type { NextRequest, NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
 
@@ -80,17 +80,17 @@ export function verifyAuthToken(token: string): AuthTokenPayload | null {
   }
 }
 
-export function getAuthTokenFromRequest(request: NextRequest): string | null {
-  const authorization = request.headers.get("authorization");
+export function getAuthTokenFromRequest(request: Request): string | null {
+  const authorization = request.headers.authorization;
 
   if (authorization?.toLowerCase().startsWith("bearer ")) {
     return authorization.slice(7).trim();
   }
 
-  return request.cookies.get(AUTH_COOKIE_NAME)?.value ?? null;
+  return request.cookies?.[AUTH_COOKIE_NAME] ?? null;
 }
 
-export async function getCurrentUser(request: NextRequest): Promise<PublicUser | null> {
+export async function getCurrentUser(request: Request): Promise<PublicUser | null> {
   const token = getAuthTokenFromRequest(request);
 
   if (!token) {
@@ -115,7 +115,7 @@ export async function getCurrentUser(request: NextRequest): Promise<PublicUser |
   return user;
 }
 
-export async function getCurrentAdmin(request: NextRequest): Promise<PublicUser | null> {
+export async function getCurrentAdmin(request: Request): Promise<PublicUser | null> {
   const user = await getCurrentUser(request);
 
   if (!user || user.role !== "admin") {
@@ -125,25 +125,24 @@ export async function getCurrentAdmin(request: NextRequest): Promise<PublicUser 
   return user;
 }
 
-export function setAuthCookie(response: NextResponse, token: string): NextResponse {
-  response.cookies.set(AUTH_COOKIE_NAME, token, {
+export function setAuthCookie(response: Response, token: string): Response {
+  response.cookie(AUTH_COOKIE_NAME, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
+    maxAge: TOKEN_MAX_AGE_SECONDS * 1000,
     path: "/",
-    maxAge: TOKEN_MAX_AGE_SECONDS,
   });
 
   return response;
 }
 
-export function clearAuthCookie(response: NextResponse): NextResponse {
-  response.cookies.set(AUTH_COOKIE_NAME, "", {
+export function clearAuthCookie(response: Response): Response {
+  response.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
     path: "/",
-    maxAge: 0,
   });
 
   return response;

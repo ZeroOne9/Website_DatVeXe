@@ -1,5 +1,5 @@
 import { Prisma } from "@prisma/client";
-import type { NextRequest } from "next/server";
+import type { Request } from "express";
 
 import { getCurrentUser, publicUserSelect, signAuthToken } from "@/lib/auth";
 import { ApiError } from "@/lib/errors";
@@ -97,7 +97,7 @@ export async function loginUser(input: LoginInput): Promise<AuthResult> {
   };
 }
 
-export async function getAuthenticatedUser(request: NextRequest) {
+export async function getAuthenticatedUser(request: Request) {
   const user = await getCurrentUser(request);
 
   if (!user) {
