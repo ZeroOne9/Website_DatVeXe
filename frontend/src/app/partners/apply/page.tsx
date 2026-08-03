@@ -46,14 +46,14 @@ export default function PartnerApplyPage() {
       });
 
       setSuccessMessage(
-        `${response.message || "Ho so dang ky da duoc gui thanh cong."} Ma ho so: #${response.data.application.id}`,
+        `${response.message || "Hồ sơ đăng ký đã được gửi thành công."} Mã hồ sơ: #${response.data.application.id}`,
       );
       setForm(initialForm);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Khong the ket noi den may chu.");
+        setError("Không thể kết nối đến máy chủ.");
       }
     } finally {
       setLoading(false);
@@ -65,12 +65,12 @@ export default function PartnerApplyPage() {
       <section className="card" style={{ maxWidth: 840, margin: "0 auto" }}>
         <div style={{ marginBottom: 24 }}>
           <p style={{ margin: "0 0 8px", color: "var(--primary)", fontWeight: 700 }}>
-            Dang ky mo ban ve
+            Đăng ký mở bán vé
           </p>
-          <h1 style={{ margin: "0 0 12px", fontSize: 30 }}>Tro thanh nha xe doi tac</h1>
+          <h1 style={{ margin: "0 0 12px", fontSize: 30 }}>Trở thành nhà xe đối tác</h1>
           <p style={{ margin: 0, color: "var(--muted)", lineHeight: 1.6 }}>
-            Gui thong tin nha xe de admin kiem tra va phe duyet. Sau khi duoc duyet, nha xe se
-            xuat hien trong he thong va tai khoan dang ky se duoc kich hoat voi vai tro nha xe.
+            Gửi thông tin nhà xe để admin kiểm tra và phê duyệt. Sau khi được duyệt, nhà xe sẽ
+            xuất hiện trong hệ thống và tài khoản đăng ký sẽ được kích hoạt với vai trò nhà xe.
           </p>
         </div>
 
@@ -87,7 +87,7 @@ export default function PartnerApplyPage() {
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="field">
-            <label htmlFor="companyName">Ten nha xe *</label>
+            <label htmlFor="companyName">Tên nhà xe *</label>
             <input
               id="companyName"
               required
@@ -95,13 +95,13 @@ export default function PartnerApplyPage() {
               maxLength={150}
               value={form.companyName}
               onChange={(event) => updateField("companyName", event.target.value)}
-              placeholder="Vi du: Nha xe Phuong Trang"
+              placeholder="Ví dụ: Nhà xe Phương Trang"
             />
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div className="field">
-              <label htmlFor="contactName">Nguoi lien he *</label>
+              <label htmlFor="contactName">Người liên hệ *</label>
               <input
                 id="contactName"
                 required
@@ -114,7 +114,7 @@ export default function PartnerApplyPage() {
             </div>
 
             <div className="field">
-              <label htmlFor="phone">So dien thoai *</label>
+              <label htmlFor="phone">Số điện thoại *</label>
               <input
                 id="phone"
                 required
@@ -142,7 +142,7 @@ export default function PartnerApplyPage() {
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
             <div className="field">
-              <label htmlFor="accountEmail">Email dang nhap *</label>
+              <label htmlFor="accountEmail">Email đăng nhập *</label>
               <input
                 id="accountEmail"
                 required
@@ -156,7 +156,7 @@ export default function PartnerApplyPage() {
             </div>
 
             <div className="field">
-              <label htmlFor="password">Mat khau *</label>
+              <label htmlFor="password">Mật khẩu *</label>
               <input
                 id="password"
                 required
@@ -164,7 +164,7 @@ export default function PartnerApplyPage() {
                 maxLength={72}
                 value={form.password}
                 onChange={(event) => updateField("password", event.target.value)}
-                placeholder="It nhat 6 ky tu"
+                placeholder="Ít nhất 6 ký tự"
                 type="password"
                 autoComplete="new-password"
               />
@@ -172,24 +172,24 @@ export default function PartnerApplyPage() {
           </div>
 
           <div className="field">
-            <label htmlFor="address">Dia chi</label>
+            <label htmlFor="address">Địa chỉ</label>
             <input
               id="address"
               maxLength={255}
               value={form.address}
               onChange={(event) => updateField("address", event.target.value)}
-              placeholder="Dia chi van phong hoac ben xe"
+              placeholder="Địa chỉ văn phòng hoặc bến xe"
             />
           </div>
 
           <div className="field">
-            <label htmlFor="description">Mo ta them</label>
+            <label htmlFor="description">Mô tả thêm</label>
             <textarea
               id="description"
               maxLength={1000}
               value={form.description}
               onChange={(event) => updateField("description", event.target.value)}
-              placeholder="Gioi thieu ngan ve nha xe, khu vuc hoat dong, so luong xe..."
+              placeholder="Giới thiệu ngắn về nhà xe, khu vực hoạt động, số lượng xe..."
               style={{
                 minHeight: 120,
                 resize: "vertical",
@@ -203,10 +203,10 @@ export default function PartnerApplyPage() {
 
           <div style={{ display: "flex", gap: 12, justifyContent: "space-between", alignItems: "center" }}>
             <Link href="/" style={{ color: "var(--muted)", fontWeight: 600 }}>
-              Quay lai trang chu
+              Quay lại trang chủ
             </Link>
             <button type="submit" className="button primary" disabled={loading}>
-              {loading ? "Dang gui..." : "Gui ho so dang ky"}
+              {loading ? "Đang gửi..." : "Gửi hồ sơ đăng ký"}
             </button>
           </div>
         </form>

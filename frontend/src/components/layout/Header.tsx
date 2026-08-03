@@ -3,6 +3,13 @@
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 
+const headerLinkStyle = {
+  marginRight: 16,
+  fontWeight: 500,
+  color: "white",
+  textDecoration: "none",
+} as const;
+
 export function Header() {
   const { user, loading, logout } = useAuth();
 
@@ -21,26 +28,37 @@ export function Header() {
         <div className="auth-links">
           {loading ? null : user ? (
             <>
-              <Link href="/account/tickets" style={{ marginRight: 16, fontWeight: 500, color: 'white', textDecoration: 'none' }}>Vé của tôi</Link>
+              <Link href="/account" style={headerLinkStyle}>
+                Tài khoản của tôi
+              </Link>
+              <Link href="/account/tickets" style={headerLinkStyle}>
+                Vé của tôi
+              </Link>
               {user.role === "partner" && (
-                <Link href="/partner" style={{ marginRight: 16, fontWeight: 500, color: 'white', textDecoration: 'none' }}>
+                <Link href="/partner" style={headerLinkStyle}>
                   Khu nhà xe
                 </Link>
               )}
               {user.role === "admin" && (
-                <Link href="/admin" style={{ marginRight: 16, fontWeight: 500, color: 'white', textDecoration: 'none' }}>
+                <Link href="/admin" style={headerLinkStyle}>
                   Admin
                 </Link>
               )}
-              <span style={{ fontSize: 14, marginRight: 16 }}>Xin chào, <strong>{user.fullName}</strong></span>
+              <span style={{ fontSize: 14, marginRight: 16 }}>
+                Xin chào, <strong>{user.fullName}</strong>
+              </span>
               <button className="button outline" onClick={logout} type="button">
                 Đăng xuất
               </button>
             </>
           ) : (
             <>
-              <Link href="/login" className="button outline">Đăng nhập</Link>
-              <Link href="/register" className="button secondary">Đăng ký</Link>
+              <Link href="/login" className="button outline">
+                Đăng nhập
+              </Link>
+              <Link href="/register" className="button secondary">
+                Đăng ký
+              </Link>
             </>
           )}
         </div>
