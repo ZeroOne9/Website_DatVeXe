@@ -9,6 +9,8 @@ import {
   createAdminTripController,
   createAdminVehicleController,
   createAdminVehicleSeatController,
+  deleteAdminBusCompanyController,
+  deleteAdminLocationController,
   deleteAdminRouteController,
   deleteAdminTripController,
   deleteAdminUserController,
@@ -24,6 +26,8 @@ import {
   listAdminVehiclesController,
   listAdminVehicleSeatsController,
   rejectAdminPartnerApplicationController,
+  updateAdminBusCompanyController,
+  updateAdminLocationController,
   updateAdminRouteController,
   updateAdminTripController,
   updateAdminUserController,
@@ -92,12 +96,16 @@ export function createApiRouter() {
   router.get("/admin/dashboard", asyncRoute(getDashboardStatsController));
   router.get("/admin/locations", asyncRoute(listAdminLocationsController));
   router.post("/admin/locations", asyncRoute(createAdminLocationController));
+  router.patch("/admin/locations/:id", asyncRoute(updateAdminLocationController));
+  router.delete("/admin/locations/:id", asyncRoute(deleteAdminLocationController));
   router.get("/admin/routes", asyncRoute(listAdminRoutesController));
   router.post("/admin/routes", asyncRoute(createAdminRouteController));
   router.patch("/admin/routes/:id", asyncRoute(updateAdminRouteController));
   router.delete("/admin/routes/:id", asyncRoute(deleteAdminRouteController));
   router.get("/admin/bus-companies", asyncRoute(listAdminBusCompaniesController));
   router.post("/admin/bus-companies", asyncRoute(createAdminBusCompanyController));
+  router.patch("/admin/bus-companies/:id", asyncRoute(updateAdminBusCompanyController));
+  router.delete("/admin/bus-companies/:id", asyncRoute(deleteAdminBusCompanyController));
   router.get("/admin/partner-applications", asyncRoute(listAdminPartnerApplicationsController));
   router.patch("/admin/partner-applications/:id/approve", asyncRoute(approveAdminPartnerApplicationController));
   router.patch("/admin/partner-applications/:id/reject", asyncRoute(rejectAdminPartnerApplicationController));

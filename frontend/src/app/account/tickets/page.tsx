@@ -42,18 +42,64 @@ export default function MyTicketsPage() {
     expired: { text: "Hết hạn", class: "status danger" }
   };
 
-  async function handleCancel(e: React.MouseEvent, bookingCode: string) {
+  function getEarliestDepartureTime(booking: BookingDetail) {
+    const departureTimes = booking.bookingSeats
+      .map((bookingSeat) => new Date(bookingSeat.trip.departureTime))
+      .filter((date) => !Number.isNaN(date.getTime()))
+      .sort((a, b) => a.getTime() - b.getTime());
+
+    return departureTimes[0] ?? null;
+  }
+
+  function getCancelMessage(booking: BookingDetail) {
+    const earliestDepartureTime = getEarliestDepartureTime(booking);
+
+    if (!earliestDepartureTime) {
+      return "Không xác định được giờ khởi hành của vé này.";
+    }
+
+    if (earliestDepartureTime <= new Date()) {
+      return "Xe đã khởi hành, không thể hủy vé.";
+    }
+
+    if (booking.status === "pending") {
+      return "Vé chưa thanh toán có thể hủy bất cứ lúc nào. Bạn có chắc muốn hủy vé này?";
+    }
+
+    const hoursBeforeDeparture = (earliestDepartureTime.getTime() - Date.now()) / (60 * 60 * 1000);
+
+    if (booking.status === "confirmed" && hoursBeforeDeparture < 24) {
+      return "Vé đã thanh toán chỉ được hủy trước giờ khởi hành tối thiểu 24 giờ. Vé này không đủ điều kiện hủy.";
+    }
+
+    const refundAmount = Math.floor(booking.totalFareVnd * 0.9);
+    const feeAmount = booking.totalFareVnd - refundAmount;
+
+    return `Vé đã thanh toán và còn trước giờ khởi hành ít nhất 24 giờ.\n\nHệ thống sẽ mô phỏng hoàn ${formatMoney(refundAmount)} (90% tiền vé), phí hủy ${formatMoney(feeAmount)} (10%).\n\nBạn có chắc muốn hủy vé này?`;
+  }
+
+  async function handleCancel(e: React.MouseEvent, booking: BookingDetail) {
     e.preventDefault();
     e.stopPropagation();
-    
-    if (!confirm("Bạn có chắc chắn muốn hủy vé này? Hành động này không thể hoàn tác.")) {
+
+    const cancelMessage = getCancelMessage(booking);
+    if (cancelMessage.includes("không thể hủy") || cancelMessage.includes("không đủ điều kiện")) {
+      alert(cancelMessage);
+      return;
+    }
+
+    if (!confirm(cancelMessage)) {
       return;
     }
     
     try {
       setLoading(true);
-      await bookingService.cancelBooking(bookingCode);
-      alert("Hủy vé thành công!");
+      await bookingService.cancelBooking(booking.bookingCode);
+      if (booking.status === "confirmed") {
+        alert(`Hủy vé thành công! Đây là thanh toán mô phỏng, hệ thống ghi nhận hoàn 90% tiền vé: ${formatMoney(Math.floor(booking.totalFareVnd * 0.9))}.`);
+      } else {
+        alert("Hủy vé thành công!");
+      }
       const res = await bookingService.getMyBookings();
       setBookings(res.data.bookings);
     } catch (err: any) {
@@ -165,7 +211,7 @@ export default function MyTicketsPage() {
                               <button
                                 className="button outline"
                                 style={{ height: 32, fontSize: 13, padding: "0 12px", color: "var(--red)", borderColor: "var(--red)" }}
-                                onClick={(e) => handleCancel(e, booking.bookingCode)}
+                                onClick={(e) => handleCancel(e, booking)}
                               >
                                 Hủy vé
                               </button>

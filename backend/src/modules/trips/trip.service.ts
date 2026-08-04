@@ -27,20 +27,54 @@ function getActiveSeatHoldWhere() {
   };
 }
 
+function normalizeLocationSearch(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D")
+    .trim();
+}
+
+function getLocationSearchTerms(label: string | undefined) {
+  if (!label) return [];
+
+  const normalized = normalizeLocationSearch(label);
+  const withoutCityPrefix = normalized.replace(/^tp\.?\s*/i, "").trim();
+
+  return Array.from(new Set([label, normalized, withoutCityPrefix].filter(Boolean)));
+}
+
+function getLocationWhere(label: string | undefined, locationId: number) {
+  const terms = getLocationSearchTerms(label);
+
+  if (!label) {
+    return { id: locationId };
+  }
+
+  return {
+    OR: [
+      { id: locationId },
+      ...terms.flatMap((term) => [{ province: { contains: term } }, { name: { contains: term } }]),
+    ],
+  };
+}
+
 export async function searchTrips(input: TripSearchInput) {
-  const { start, end } = getDateRange(input.date);
+  const dateRange = input.date ? getDateRange(input.date) : null;
 
   const trips = await prisma.trip.findMany({
     where: {
       route: {
-        departureLocationId: input.departureLocationId,
-        destinationLocationId: input.destinationLocationId,
+        departureLocation: {
+          is: getLocationWhere(input.departureLocationLabel, input.departureLocationId),
+        },
+        destinationLocation: {
+          is: getLocationWhere(input.destinationLocationLabel, input.destinationLocationId),
+        },
         status: "active",
       },
-      departureTime: {
-        gte: start,
-        lt: end,
-      },
+      departureTime: dateRange ? { gte: dateRange.start, lt: dateRange.end } : { gte: new Date() },
       status: "scheduled",
     },
     orderBy: {

@@ -29,7 +29,7 @@ export default function RegisterPage() {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Khong the ket noi den may chu.");
+        setError("Không thể kết nối đến máy chủ.");
       }
     } finally {
       setLoading(false);
@@ -40,16 +40,16 @@ export default function RegisterPage() {
     <div className="page-shell">
       <div className="auth-container">
         <div className="card panel">
-          <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Dang ky tai khoan</h1>
+          <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Đăng ký tài khoản</h1>
           <p className="muted" style={{ margin: "0 0 24px" }}>
-            Tao tai khoan moi de dat ve nhanh hon.
+            Tạo tài khoản mới để đặt vé nhanh hơn.
           </p>
 
           {error && <div className="message error">{error}</div>}
 
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="field">
-              <label htmlFor="reg-fullname">Ho va ten</label>
+              <label htmlFor="reg-fullname">Họ và tên</label>
               <input
                 id="reg-fullname"
                 type="text"
@@ -58,7 +58,7 @@ export default function RegisterPage() {
                 maxLength={120}
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Nguyen Van A"
+                placeholder="Nguyễn Văn A"
                 autoComplete="name"
               />
             </div>
@@ -77,7 +77,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="field">
-              <label htmlFor="reg-phone">So dien thoai (tuy chon)</label>
+              <label htmlFor="reg-phone">Số điện thoại (tùy chọn)</label>
               <input
                 id="reg-phone"
                 type="tel"
@@ -89,7 +89,7 @@ export default function RegisterPage() {
             </div>
 
             <div className="field">
-              <label htmlFor="reg-password">Mat khau</label>
+              <label htmlFor="reg-password">Mật khẩu</label>
               <input
                 id="reg-password"
                 type="password"
@@ -98,20 +98,20 @@ export default function RegisterPage() {
                 maxLength={72}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="It nhat 6 ky tu"
+                placeholder="Ít nhất 6 ký tự"
                 autoComplete="new-password"
               />
             </div>
 
             <button type="submit" className="button" disabled={loading}>
-              {loading ? "Dang xu ly..." : "Dang ky"}
+              {loading ? "Đang xử lý..." : "Đăng ký"}
             </button>
           </form>
 
           <p style={{ marginTop: 20, textAlign: "center" }} className="muted">
-            Da co tai khoan?{" "}
+            Đã có tài khoản?{" "}
             <Link href="/login" style={{ color: "var(--primary)", fontWeight: 700 }}>
-              Dang nhap
+              Đăng nhập
             </Link>
           </p>
         </div>

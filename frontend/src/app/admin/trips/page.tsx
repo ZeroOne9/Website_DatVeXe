@@ -6,10 +6,10 @@ import { adminService } from "@/services/adminService";
 import { formatMoney } from "@/lib/format";
 
 const statusOptions = [
-  { value: "scheduled", label: "Chua khoi hanh" },
-  { value: "departed", label: "Da khoi hanh" },
-  { value: "completed", label: "Hoan thanh" },
-  { value: "cancelled", label: "Da huy" },
+  { value: "scheduled", label: "Chưa khởi hành" },
+  { value: "departed", label: "Đã khởi hành" },
+  { value: "completed", label: "Hoàn thành" },
+  { value: "cancelled", label: "Đã hủy" },
 ];
 
 function toDateTimeLocal(value?: string | null) {
@@ -36,6 +36,9 @@ export default function AdminTripsPage() {
   const [vehicles, setVehicles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [departureFilter, setDepartureFilter] = useState("");
+  const [destinationFilter, setDestinationFilter] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState({
     routeId: "",
@@ -47,9 +50,34 @@ export default function AdminTripsPage() {
   });
 
   const filteredTrips = useMemo(() => {
-    if (!statusFilter) return trips;
-    return trips.filter((trip) => trip.status === statusFilter);
-  }, [trips, statusFilter]);
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return trips.filter((trip) => {
+      const departureName = trip.route?.departureLocation?.name || "";
+      const destinationName = trip.route?.destinationLocation?.name || "";
+      const companyName = trip.vehicle?.busCompany?.name || "";
+      const vehicleName = trip.vehicle?.name || "";
+      const licensePlate = trip.vehicle?.licensePlate || "";
+      const searchable = `${trip.id} ${departureName} ${destinationName} ${companyName} ${vehicleName} ${licensePlate}`.toLowerCase();
+
+      return (
+        (!statusFilter || trip.status === statusFilter) &&
+        (!departureFilter || departureName === departureFilter) &&
+        (!destinationFilter || destinationName === destinationFilter) &&
+        (!normalizedSearch || searchable.includes(normalizedSearch))
+      );
+    });
+  }, [departureFilter, destinationFilter, searchTerm, statusFilter, trips]);
+
+  const departureOptions = useMemo(
+    () => Array.from(new Set(trips.map((trip) => trip.route?.departureLocation?.name).filter(Boolean))).sort(),
+    [trips],
+  );
+
+  const destinationOptions = useMemo(
+    () => Array.from(new Set(trips.map((trip) => trip.route?.destinationLocation?.name).filter(Boolean))).sort(),
+    [trips],
+  );
 
   const loadData = async () => {
     try {
@@ -63,7 +91,7 @@ export default function AdminTripsPage() {
       setRoutes(routesRes.data.routes || []);
       setVehicles(vehiclesRes.data.vehicles || []);
     } catch (err: any) {
-      alert(err.message || "Khong the tai du lieu chuyen xe.");
+      alert(err.message || "Không thể tải dữ liệu chuyến xe.");
     } finally {
       setLoading(false);
     }
@@ -100,29 +128,29 @@ export default function AdminTripsPage() {
   const saveEdit = async () => {
     if (!editingId) return;
     if (!form.routeId || !form.vehicleId || !form.departureTime || !form.priceVnd) {
-      alert("Vui long nhap du route, xe, gio khoi hanh va gia ve.");
+      alert("Vui lòng nhập đủ tuyến, xe, giờ khởi hành và giá vé.");
       return;
     }
 
     try {
       await adminService.updateTrip(editingId, buildTripPayload(form));
-      alert("Cap nhat chuyen xe thanh cong.");
+      alert("Cập nhật chuyến xe thành công.");
       cancelEdit();
       await loadData();
     } catch (err: any) {
-      alert(err.message || "Khong the cap nhat chuyen xe.");
+      alert(err.message || "Không thể cập nhật chuyến xe.");
     }
   };
 
   const deleteTrip = async (trip: any) => {
-    if (!confirm(`Xoa chuyen #${trip.id}? Chi xoa duoc chuyen chua co ve dat.`)) return;
+    if (!confirm(`Xóa chuyến #${trip.id}? Chỉ xóa được chuyến chưa có vé đặt.`)) return;
 
     try {
       await adminService.deleteTrip(trip.id);
-      alert("Xoa chuyen xe thanh cong.");
+      alert("Xóa chuyến xe thành công.");
       await loadData();
     } catch (err: any) {
-      alert(err.message || "Khong the xoa chuyen xe.");
+      alert(err.message || "Không thể xóa chuyến xe.");
     }
   };
 
@@ -130,38 +158,94 @@ export default function AdminTripsPage() {
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
         <div>
-          <h1 style={{ fontSize: 24, margin: 0 }}>Quan ly Chuyen xe</h1>
+          <h1 style={{ fontSize: 24, margin: 0 }}>Quản lý Chuyến xe</h1>
           <p style={{ color: "var(--muted)", marginTop: 6 }}>
-            Tao, cap nhat, huy hoac xoa chuyen xe chua phat sinh ve.
+            Tạo, cập nhật, hủy hoặc xóa chuyến xe chưa phát sinh vé.
           </p>
         </div>
         <div style={{ display: "flex", gap: 12 }}>
           <button className="button outline" onClick={() => void loadData()}>
-            Lam moi
+            Làm mới
           </button>
           <Link href="/admin/trips/create" className="button">
-            + Tao chuyen moi
+            + Tạo chuyến mới
           </Link>
         </div>
       </div>
 
-      <div style={{ marginBottom: 16, maxWidth: 240 }}>
-        <select className="input" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
-          <option value="">Tat ca trang thai</option>
-          {statusOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+      <div
+        className="card"
+        style={{
+          padding: 16,
+          marginBottom: 16,
+          display: "grid",
+          gridTemplateColumns: "1.4fr repeat(3, minmax(160px, 1fr)) auto",
+          gap: 12,
+          alignItems: "end",
+        }}
+      >
+        <label>
+          <span style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: 13 }}>Tìm kiếm</span>
+          <input
+            className="input"
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Mã chuyến, nhà xe, biển số..."
+          />
+        </label>
+        <label>
+          <span style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: 13 }}>Nơi xuất phát</span>
+          <select className="input" value={departureFilter} onChange={(event) => setDepartureFilter(event.target.value)}>
+            <option value="">Tất cả</option>
+            {departureOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: 13 }}>Nơi đến</span>
+          <select className="input" value={destinationFilter} onChange={(event) => setDestinationFilter(event.target.value)}>
+            <option value="">Tất cả</option>
+            {destinationOptions.map((name) => (
+              <option key={name} value={name}>
+                {name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          <span style={{ display: "block", marginBottom: 6, fontWeight: 600, fontSize: 13 }}>Trạng thái</span>
+          <select className="input" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+            <option value="">Tất cả trạng thái</option>
+            {statusOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button
+          className="button outline"
+          type="button"
+          onClick={() => {
+            setSearchTerm("");
+            setDepartureFilter("");
+            setDestinationFilter("");
+            setStatusFilter("");
+          }}
+        >
+          Xóa lọc
+        </button>
       </div>
 
       {editingId && (
         <div className="card" style={{ padding: 20, marginBottom: 20 }}>
-          <h2 style={{ fontSize: 18, marginTop: 0 }}>Sua chuyen #{editingId}</h2>
+          <h2 style={{ fontSize: 18, marginTop: 0 }}>Sửa chuyến #{editingId}</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 16 }}>
             <select className="input" value={form.routeId} onChange={(e) => setForm({ ...form, routeId: e.target.value })}>
-              <option value="">Chon tuyen xe</option>
+              <option value="">Chọn tuyến xe</option>
               {routes.map((route) => (
                 <option key={route.id} value={route.id}>
                   {route.departureLocation?.name} - {route.destinationLocation?.name}
@@ -169,7 +253,7 @@ export default function AdminTripsPage() {
               ))}
             </select>
             <select className="input" value={form.vehicleId} onChange={(e) => setForm({ ...form, vehicleId: e.target.value })}>
-              <option value="">Chon xe</option>
+              <option value="">Chọn xe</option>
               {vehicles.map((vehicle) => (
                 <option key={vehicle.id} value={vehicle.id}>
                   {vehicle.name} - {vehicle.licensePlate} ({vehicle.busCompany?.name})
@@ -195,7 +279,7 @@ export default function AdminTripsPage() {
               step="1000"
               value={form.priceVnd}
               onChange={(e) => setForm({ ...form, priceVnd: e.target.value })}
-              placeholder="Gia ve"
+              placeholder="Giá vé"
             />
             <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
               {statusOptions.map((option) => (
@@ -207,10 +291,10 @@ export default function AdminTripsPage() {
           </div>
           <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
             <button className="button" onClick={() => void saveEdit()}>
-              Luu thay doi
+              Lưu thay đổi
             </button>
             <button className="button outline" onClick={cancelEdit}>
-              Huy
+              Hủy
             </button>
           </div>
         </div>
@@ -218,19 +302,19 @@ export default function AdminTripsPage() {
 
       <div className="admin-table-container">
         {loading && trips.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center" }}>Dang tai...</div>
+          <div style={{ padding: 40, textAlign: "center" }}>Đang tải...</div>
         ) : (
           <table className="admin-table">
             <thead>
               <tr>
                 <th>ID</th>
-                <th>Tuyen</th>
-                <th>Xe & Nha xe</th>
-                <th>Khoi hanh</th>
-                <th>Gia ve</th>
-                <th>Ve da dat</th>
-                <th>Trang thai</th>
-                <th>Thao tac</th>
+                <th>Tuyến</th>
+                <th>Xe & Nhà xe</th>
+                <th>Khởi hành</th>
+                <th>Giá vé</th>
+                <th>Vé đã đặt</th>
+                <th>Trạng thái</th>
+                <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -253,10 +337,10 @@ export default function AdminTripsPage() {
                   <td>
                     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                       <button className="button outline" style={{ height: 32, fontSize: 13 }} onClick={() => startEdit(trip)}>
-                        Sua
+                        Sửa
                       </button>
                       <button className="button danger" style={{ height: 32, fontSize: 13 }} onClick={() => void deleteTrip(trip)}>
-                        Xoa
+                        Xóa
                       </button>
                     </div>
                   </td>
@@ -265,7 +349,7 @@ export default function AdminTripsPage() {
               {filteredTrips.length === 0 && (
                 <tr>
                   <td colSpan={8} style={{ textAlign: "center", padding: 40, color: "var(--muted)" }}>
-                    Chua co chuyen xe phu hop
+                    Chưa có chuyến xe phù hợp
                   </td>
                 </tr>
               )}

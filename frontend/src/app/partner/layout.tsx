@@ -23,13 +23,13 @@ export default function PartnerLayout({ children }: { children: React.ReactNode 
   }, [user, loading, router]);
 
   if (loading || !user || user.role !== "partner") {
-    return <div style={{ padding: 40, textAlign: "center" }}>Dang kiem tra quyen nha xe...</div>;
+    return <div style={{ padding: 40, textAlign: "center" }}>Đang kiểm tra quyền nhà xe...</div>;
   }
 
   const menuItems = [
-    { label: "Tong quan", href: "/partner" },
-    { label: "Xe cua toi", href: "/partner/vehicles" },
-    { label: "Chuyen xe", href: "/partner/trips" },
+    { label: "Tổng quan", href: "/partner" },
+    { label: "Xe của tôi", href: "/partner/vehicles" },
+    { label: "Chuyến xe", href: "/partner/trips" },
     { label: "Booking", href: "/partner/bookings" },
   ];
 
@@ -37,7 +37,7 @@ export default function PartnerLayout({ children }: { children: React.ReactNode 
     <div className="admin-layout">
       <aside className="admin-sidebar">
         <Link href="/partner" className="brand">
-          Partner Panel
+          Nhà xe
         </Link>
         <div className="admin-sidebar-menu">
           {menuItems.map((item) => {
@@ -59,10 +59,10 @@ export default function PartnerLayout({ children }: { children: React.ReactNode 
         <header className="admin-header">
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             <span style={{ fontSize: 14 }}>
-              Xin chao, <strong>{user.fullName}</strong>
+              Xin chào, <strong>{user.fullName}</strong>
             </span>
             <button className="button outline" style={{ height: 32, fontSize: 13 }} onClick={logout}>
-              Dang xuat
+              Đăng xuất
             </button>
           </div>
         </header>

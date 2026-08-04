@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+
 import { adminService } from "@/services/adminService";
 
 export default function AdminCreateBusCompanyPage() {
@@ -17,7 +18,7 @@ export default function AdminCreateBusCompanyPage() {
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,7 +30,7 @@ export default function AdminCreateBusCompanyPage() {
 
     try {
       setLoading(true);
-      
+
       const payload = {
         name: formData.name.trim(),
         phone: formData.phone.trim() || undefined,
@@ -59,12 +60,11 @@ export default function AdminCreateBusCompanyPage() {
 
       <div className="card" style={{ padding: 32, maxWidth: 600 }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          
           <div>
             <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Tên nhà xe *</label>
-            <input 
-              type="text" 
-              className="input" 
+            <input
+              type="text"
+              className="input"
               name="name"
               value={formData.name}
               onChange={handleChange}
@@ -76,9 +76,9 @@ export default function AdminCreateBusCompanyPage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             <div>
               <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Số điện thoại</label>
-              <input 
-                type="text" 
-                className="input" 
+              <input
+                type="text"
+                className="input"
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
@@ -87,9 +87,9 @@ export default function AdminCreateBusCompanyPage() {
             </div>
             <div>
               <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Email</label>
-              <input 
-                type="email" 
-                className="input" 
+              <input
+                type="email"
+                className="input"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
@@ -100,9 +100,9 @@ export default function AdminCreateBusCompanyPage() {
 
           <div>
             <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Địa chỉ văn phòng</label>
-            <input 
-              type="text" 
-              className="input" 
+            <input
+              type="text"
+              className="input"
               name="address"
               value={formData.address}
               onChange={handleChange}
@@ -115,7 +115,6 @@ export default function AdminCreateBusCompanyPage() {
               {loading ? "Đang xử lý..." : "Lưu nhà xe"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

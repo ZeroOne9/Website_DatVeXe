@@ -4,7 +4,9 @@ import type { TripSearchItem, TripSeatsResult } from "@/services/types";
 export type TripSearchParams = {
   departureLocationId: string | number;
   destinationLocationId: string | number;
-  date: string;
+  departureLocationLabel?: string;
+  destinationLocationLabel?: string;
+  date?: string;
 };
 
 export const tripService = {

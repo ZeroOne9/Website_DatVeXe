@@ -13,6 +13,8 @@ import {
   createAdminTrip,
   createAdminVehicle,
   createAdminVehicleSeat,
+  deleteAdminBusCompany,
+  deleteAdminLocation,
   deleteAdminRoute,
   deleteAdminTrip,
   deleteAdminUser,
@@ -28,6 +30,8 @@ import {
   listAdminVehicles,
   listAdminVehicleSeats,
   rejectAdminPartnerApplication,
+  updateAdminBusCompany,
+  updateAdminLocation,
   updateAdminRoute,
   updateAdminTrip,
   updateAdminUser,
@@ -44,6 +48,8 @@ import {
   listPartnerApplicationsQuerySchema,
   listUsersQuerySchema,
   updateRouteSchema,
+  updateBusCompanySchema,
+  updateLocationSchema,
   updateTripSchema,
   updateUserSchema,
   updateVehicleSchema,
@@ -67,6 +73,21 @@ export async function createAdminLocationController(request: Request, response: 
   const input = parse(createLocationSchema, request.body);
   const location = await createAdminLocation(input);
   success(response, { location }, { status: 201, message: "Tao dia diem thanh cong." });
+}
+
+export async function updateAdminLocationController(request: Request, response: Response) {
+  await requireAdmin(request);
+  const params = parse(idParamSchema, request.params);
+  const input = parse(updateLocationSchema, request.body);
+  const location = await updateAdminLocation(params.id, input);
+  success(response, { location }, { message: "Cap nhat dia diem thanh cong." });
+}
+
+export async function deleteAdminLocationController(request: Request, response: Response) {
+  await requireAdmin(request);
+  const params = parse(idParamSchema, request.params);
+  const location = await deleteAdminLocation(params.id);
+  success(response, { location }, { message: "Xoa dia diem thanh cong." });
 }
 
 export async function listAdminRoutesController(request: Request, response: Response) {
@@ -108,6 +129,21 @@ export async function createAdminBusCompanyController(request: Request, response
   const input = parse(createBusCompanySchema, request.body);
   const busCompany = await createAdminBusCompany(input);
   success(response, { busCompany }, { status: 201, message: "Tao nha xe thanh cong." });
+}
+
+export async function updateAdminBusCompanyController(request: Request, response: Response) {
+  await requireAdmin(request);
+  const params = parse(idParamSchema, request.params);
+  const input = parse(updateBusCompanySchema, request.body);
+  const busCompany = await updateAdminBusCompany(params.id, input);
+  success(response, { busCompany }, { message: "Cap nhat nha xe thanh cong." });
+}
+
+export async function deleteAdminBusCompanyController(request: Request, response: Response) {
+  await requireAdmin(request);
+  const params = parse(idParamSchema, request.params);
+  const busCompany = await deleteAdminBusCompany(params.id);
+  success(response, { busCompany }, { message: "Xoa nha xe thanh cong." });
 }
 
 export async function listAdminPartnerApplicationsController(request: Request, response: Response) {

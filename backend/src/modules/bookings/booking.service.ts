@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import type { CreateBookingInput } from "./booking.validator";
 
 const BOOKING_HOLD_MINUTES = 15;
+const PAID_BOOKING_CANCEL_REFUND_HOURS = 24;
 
 function createBookingCode() {
   const random = Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -365,6 +366,7 @@ export async function cancelBooking(bookingCode: string) {
       select: {
         id: true,
         status: true,
+        totalFareVnd: true,
         bookingSeats: {
           select: {
             trip: {
@@ -406,13 +408,37 @@ export async function cancelBooking(bookingCode: string) {
     );
 
     if (hasDepartedTrip) {
-      throw new ApiError("Chi co the huy ve cua chuyen xe chua khoi hanh.", 409);
+      throw new ApiError("Xe da khoi hanh, khong the huy ve.", 409);
     }
 
     const hasUsedTicket = booking.bookingSeats.some((bookingSeat) => bookingSeat.ticket?.status === "used");
 
     if (hasUsedTicket) {
       throw new ApiError("Co ve da duoc su dung, khong the huy.", 409);
+    }
+
+    if (booking.status === "confirmed") {
+      const earliestDepartureTime = booking.bookingSeats.reduce<Date | null>((earliest, bookingSeat) => {
+        const departureTime = bookingSeat.trip.departureTime;
+
+        if (!earliest || departureTime < earliest) {
+          return departureTime;
+        }
+
+        return earliest;
+      }, null);
+
+      if (!earliestDepartureTime) {
+        throw new ApiError("Khong tim thay thoi gian khoi hanh cua ve.", 409);
+      }
+
+      const hoursBeforeDeparture = (earliestDepartureTime.getTime() - Date.now()) / (60 * 60 * 1000);
+
+      if (hoursBeforeDeparture < PAID_BOOKING_CANCEL_REFUND_HOURS) {
+        throw new ApiError("Ve da thanh toan chi duoc huy truoc gio khoi hanh toi thieu 24 gio.", 409);
+      }
+    } else if (booking.status !== "pending") {
+      throw new ApiError("Chi co the huy ve dang cho thanh toan hoac ve da thanh toan hop le.", 409);
     }
 
     await tx.booking.update({

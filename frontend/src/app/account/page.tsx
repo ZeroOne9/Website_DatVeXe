@@ -128,35 +128,35 @@ export default function AccountPage() {
         <h2 style={{ marginTop: 0 }}>Hồ sơ tài khoản</h2>
         <div className="meta-grid">
           <div className="meta">
-            <span>Mã tài khoản</span>
+            <span>Mã tài khoản: </span>
             <strong>#{user.id}</strong>
           </div>
           <div className="meta">
-            <span>Họ tên</span>
+            <span>Họ tên: </span>
             <strong>{user.fullName}</strong>
           </div>
           <div className="meta">
-            <span>Email đăng nhập</span>
+            <span>Email đăng nhập: </span>
             <strong>{user.email}</strong>
           </div>
           <div className="meta">
-            <span>Số điện thoại</span>
+            <span>Số điện thoại: </span>
             <strong>{user.phone || "Chưa cập nhật"}</strong>
           </div>
           <div className="meta">
-            <span>Vai trò</span>
+            <span>Vai trò: </span>
             <strong>{roleLabel(user.role)}</strong>
           </div>
           <div className="meta">
-            <span>Trạng thái</span>
+            <span>Trạng thái: </span>
             <strong>{statusLabel(user.status)}</strong>
           </div>
           <div className="meta">
-            <span>Ngày tạo</span>
+            <span>Ngày tạo: </span>
             <strong>{formatDate(user.createdAt)}</strong>
           </div>
           <div className="meta">
-            <span>Cập nhật gần nhất</span>
+            <span>Cập nhật gần nhất: </span>
             <strong>{formatDate(user.updatedAt)}</strong>
           </div>
         </div>
@@ -167,7 +167,7 @@ export default function AccountPage() {
           <h2 style={{ marginTop: 0 }}>Cập nhật thông tin liên hệ</h2>
           <div style={{ display: "grid", gap: 14 }}>
             <label>
-              <span className="muted">Họ tên *</span>
+              <span className="muted">Họ tên * </span>
               <input
                 className="input"
                 value={profileForm.fullName}
@@ -178,11 +178,11 @@ export default function AccountPage() {
               />
             </label>
             <label>
-              <span className="muted">Email đăng nhập</span>
+              <span className="muted">Email đăng nhập * </span>
               <input className="input" value={user.email} disabled />
             </label>
             <label>
-              <span className="muted">Số điện thoại</span>
+              <span className="muted">Số điện thoại * </span>
               <input
                 className="input"
                 value={profileForm.phone}
@@ -205,7 +205,7 @@ export default function AccountPage() {
           <h2 style={{ marginTop: 0 }}>Đổi mật khẩu</h2>
           <div style={{ display: "grid", gap: 14 }}>
             <label>
-              <span className="muted">Mật khẩu hiện tại</span>
+              <span className="muted">Mật khẩu hiện tại </span>
               <input
                 className="input"
                 type="password"
@@ -215,7 +215,7 @@ export default function AccountPage() {
               />
             </label>
             <label>
-              <span className="muted">Mật khẩu mới</span>
+              <span className="muted">Mật khẩu mới </span>
               <input
                 className="input"
                 type="password"

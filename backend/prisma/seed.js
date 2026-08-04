@@ -246,6 +246,31 @@ async function main() {
       province: "Can Tho",
       address: "91B Nguyen Van Linh, Ninh Kieu",
     }),
+    vungTau: await upsertLocation({
+      name: "Ben xe Vung Tau",
+      province: "Ba Ria - Vung Tau",
+      address: "192 Nam Ky Khoi Nghia, Vung Tau",
+    }),
+    phanThiet: await upsertLocation({
+      name: "Ben xe Phan Thiet",
+      province: "Binh Thuan",
+      address: "Tu Van Tu, Phan Thiet",
+    }),
+    daNang: await upsertLocation({
+      name: "Ben xe Trung tam Da Nang",
+      province: "Da Nang",
+      address: "Ton Duc Thang, Lien Chieu",
+    }),
+    hue: await upsertLocation({
+      name: "Ben xe Phia Nam Hue",
+      province: "Thua Thien Hue",
+      address: "97 An Duong Vuong, Hue",
+    }),
+    haNoi: await upsertLocation({
+      name: "Ben xe My Dinh",
+      province: "Ha Noi",
+      address: "20 Pham Hung, Nam Tu Liem",
+    }),
   };
 
   const phuongTrang = await prisma.busCompany.upsert({
@@ -279,6 +304,40 @@ async function main() {
       email: "support@thanhbuoi.example",
       address: "TP. Ho Chi Minh",
       description: "Nha xe chuyen tuyen TP. Ho Chi Minh di Da Lat.",
+    },
+  });
+
+  const kumhoSamco = await prisma.busCompany.upsert({
+    where: { name: "Kumho Samco" },
+    update: {
+      phone: "19006065",
+      email: "support@kumhosamco.example",
+      address: "TP. Ho Chi Minh",
+      description: "Nha xe khai thac cac tuyen mien Dong va mien Trung.",
+    },
+    create: {
+      name: "Kumho Samco",
+      phone: "19006065",
+      email: "support@kumhosamco.example",
+      address: "TP. Ho Chi Minh",
+      description: "Nha xe khai thac cac tuyen mien Dong va mien Trung.",
+    },
+  });
+
+  const hanhCafe = await prisma.busCompany.upsert({
+    where: { name: "Hanh Cafe" },
+    update: {
+      phone: "19006068",
+      email: "support@hanhcafe.example",
+      address: "TP. Ho Chi Minh",
+      description: "Nha xe du lich phuc vu cac tuyen bien va mien Trung.",
+    },
+    create: {
+      name: "Hanh Cafe",
+      phone: "19006068",
+      email: "support@hanhcafe.example",
+      address: "TP. Ho Chi Minh",
+      description: "Nha xe du lich phuc vu cac tuyen bien va mien Trung.",
     },
   });
 
@@ -317,10 +376,46 @@ async function main() {
         capacity: 34,
       },
     }),
+    ks01: await prisma.vehicle.upsert({
+      where: { licensePlate: "51B-24680" },
+      update: {
+        busCompanyId: kumhoSamco.id,
+        name: "KS Express 40G",
+        vehicleType: "Giuong nam 40",
+        capacity: 40,
+        status: "active",
+      },
+      create: {
+        busCompanyId: kumhoSamco.id,
+        licensePlate: "51B-24680",
+        name: "KS Express 40G",
+        vehicleType: "Giuong nam 40",
+        capacity: 40,
+      },
+    }),
+    hc01: await prisma.vehicle.upsert({
+      where: { licensePlate: "51B-13579" },
+      update: {
+        busCompanyId: hanhCafe.id,
+        name: "HC Limousine 28",
+        vehicleType: "Limousine VIP",
+        capacity: 34,
+        status: "active",
+      },
+      create: {
+        busCompanyId: hanhCafe.id,
+        licensePlate: "51B-13579",
+        name: "HC Limousine 28",
+        vehicleType: "Limousine VIP",
+        capacity: 34,
+      },
+    }),
   };
 
   await ensureSeats(vehicles.ft01.id, "sleeper");
   await ensureSeats(vehicles.tb01.id, "vip");
+  await ensureSeats(vehicles.ks01.id, "sleeper");
+  await ensureSeats(vehicles.hc01.id, "vip");
 
   const routes = {
     hcmDaLat: await upsertRoute(locations.hcm.id, locations.daLat.id, {
@@ -343,36 +438,114 @@ async function main() {
       estimatedMinutes: 210,
       status: "active",
     }),
+    canThoHcm: await upsertRoute(locations.canTho.id, locations.hcm.id, {
+      distanceKm: 170,
+      estimatedMinutes: 210,
+      status: "active",
+    }),
+    hcmVungTau: await upsertRoute(locations.hcm.id, locations.vungTau.id, {
+      distanceKm: 95,
+      estimatedMinutes: 150,
+      status: "active",
+    }),
+    vungTauHcm: await upsertRoute(locations.vungTau.id, locations.hcm.id, {
+      distanceKm: 95,
+      estimatedMinutes: 150,
+      status: "active",
+    }),
+    hcmPhanThiet: await upsertRoute(locations.hcm.id, locations.phanThiet.id, {
+      distanceKm: 210,
+      estimatedMinutes: 300,
+      status: "active",
+    }),
+    phanThietHcm: await upsertRoute(locations.phanThiet.id, locations.hcm.id, {
+      distanceKm: 210,
+      estimatedMinutes: 300,
+      status: "active",
+    }),
+    daNangHue: await upsertRoute(locations.daNang.id, locations.hue.id, {
+      distanceKm: 105,
+      estimatedMinutes: 150,
+      status: "active",
+    }),
+    hueDaNang: await upsertRoute(locations.hue.id, locations.daNang.id, {
+      distanceKm: 105,
+      estimatedMinutes: 150,
+      status: "active",
+    }),
+    haNoiDaNang: await upsertRoute(locations.haNoi.id, locations.daNang.id, {
+      distanceKm: 770,
+      estimatedMinutes: 960,
+      status: "active",
+    }),
+    daNangHaNoi: await upsertRoute(locations.daNang.id, locations.haNoi.id, {
+      distanceKm: 770,
+      estimatedMinutes: 960,
+      status: "active",
+    }),
   };
 
   const today = new Date();
-  const tripPlans = [
-    [routes.hcmDaLat, vehicles.ft01, 1, 7, 30, 320000],
-    [routes.hcmDaLat, vehicles.tb01, 1, 22, 0, 380000],
-    [routes.hcmDaLat, vehicles.ft01, 2, 8, 0, 320000],
-    [routes.daLatHcm, vehicles.tb01, 2, 13, 30, 360000],
-    [routes.hcmNhaTrang, vehicles.ft01, 1, 20, 30, 420000],
-    [routes.hcmNhaTrang, vehicles.ft01, 3, 21, 0, 420000],
-    [routes.hcmCanTho, vehicles.tb01, 1, 9, 0, 180000],
-    [routes.hcmCanTho, vehicles.tb01, 2, 16, 0, 180000],
-    [routes.hcmDaLat, vehicles.ft01, 7, 7, 30, 320000],
-    [routes.hcmDaLat, vehicles.tb01, 7, 22, 0, 380000],
-    [routes.daLatHcm, vehicles.tb01, 8, 13, 30, 360000],
-    [routes.hcmNhaTrang, vehicles.ft01, 10, 20, 30, 420000],
-    [routes.hcmCanTho, vehicles.tb01, 14, 9, 0, 180000],
-    [routes.hcmDaLat, vehicles.ft01, 21, 8, 0, 320000],
-    [routes.hcmNhaTrang, vehicles.ft01, 21, 21, 0, 420000],
+  today.setHours(0, 0, 0, 0);
+
+  const seedEndDate = new Date(today.getFullYear(), 8, 30);
+  seedEndDate.setHours(23, 59, 59, 999);
+
+  function schedule(route, vehicle, hour, minute, priceVnd) {
+    return { route, vehicle, hour, minute, priceVnd };
+  }
+
+  const dailySchedules = [
+    schedule(routes.hcmDaLat, vehicles.ft01, 7, 30, 320000),
+    schedule(routes.hcmDaLat, vehicles.ks01, 11, 30, 340000),
+    schedule(routes.hcmDaLat, vehicles.hc01, 18, 30, 360000),
+    schedule(routes.hcmDaLat, vehicles.tb01, 22, 0, 380000),
+    schedule(routes.daLatHcm, vehicles.ft01, 8, 0, 330000),
+    schedule(routes.daLatHcm, vehicles.tb01, 13, 30, 360000),
+    schedule(routes.daLatHcm, vehicles.ks01, 23, 0, 340000),
+    schedule(routes.hcmNhaTrang, vehicles.ks01, 6, 0, 400000),
+    schedule(routes.hcmNhaTrang, vehicles.ft01, 20, 30, 420000),
+    schedule(routes.hcmNhaTrang, vehicles.hc01, 21, 30, 430000),
+    schedule(routes.hcmCanTho, vehicles.tb01, 9, 0, 180000),
+    schedule(routes.hcmCanTho, vehicles.hc01, 12, 30, 190000),
+    schedule(routes.hcmCanTho, vehicles.ft01, 17, 30, 180000),
+    schedule(routes.canThoHcm, vehicles.hc01, 5, 30, 180000),
+    schedule(routes.canThoHcm, vehicles.tb01, 15, 0, 185000),
+    schedule(routes.hcmVungTau, vehicles.hc01, 6, 30, 120000),
+    schedule(routes.hcmVungTau, vehicles.tb01, 10, 0, 120000),
+    schedule(routes.hcmVungTau, vehicles.ft01, 14, 30, 130000),
+    schedule(routes.hcmVungTau, vehicles.ks01, 19, 0, 130000),
+    schedule(routes.vungTauHcm, vehicles.hc01, 7, 0, 120000),
+    schedule(routes.vungTauHcm, vehicles.tb01, 16, 30, 120000),
+    schedule(routes.hcmPhanThiet, vehicles.hc01, 7, 15, 220000),
+    schedule(routes.hcmPhanThiet, vehicles.ks01, 13, 45, 230000),
+    schedule(routes.phanThietHcm, vehicles.hc01, 9, 30, 220000),
+    schedule(routes.daNangHue, vehicles.hc01, 8, 0, 150000),
+    schedule(routes.daNangHue, vehicles.ks01, 18, 0, 150000),
+    schedule(routes.hueDaNang, vehicles.hc01, 9, 0, 150000),
+    schedule(routes.hueDaNang, vehicles.ks01, 17, 30, 150000),
+    schedule(routes.haNoiDaNang, vehicles.ks01, 19, 30, 620000),
+    schedule(routes.haNoiDaNang, vehicles.ft01, 20, 15, 640000),
+    schedule(routes.daNangHaNoi, vehicles.ks01, 18, 45, 620000),
   ];
+
+  const tripPlans = [];
+
+  for (let cursor = new Date(today), dayOffset = 0; cursor <= seedEndDate; cursor = addDays(cursor, 1), dayOffset += 1) {
+    for (const dailySchedule of dailySchedules) {
+      tripPlans.push({ ...dailySchedule, dayOffset });
+    }
+  }
 
   const createdTrips = [];
 
-  for (const [route, vehicle, dayOffset, hour, minute, price] of tripPlans) {
+  for (const { route, vehicle, dayOffset, hour, minute, priceVnd } of tripPlans) {
     const trip = await createTrip(
       route.id,
       vehicle.id,
       atTime(addDays(today, dayOffset), hour, minute),
       route.estimatedMinutes,
-      price,
+      priceVnd,
     );
 
     createdTrips.push({ route, vehicle, dayOffset, trip });

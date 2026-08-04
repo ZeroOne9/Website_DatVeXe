@@ -37,7 +37,7 @@ function LoginContent() {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Khong the ket noi den may chu.");
+        setError("Không thể kết nối đến máy chủ.");
       }
     } finally {
       setLoading(false);
@@ -48,9 +48,9 @@ function LoginContent() {
     <div className="page-shell">
       <div className="auth-container">
         <div className="card panel">
-          <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Dang nhap</h1>
+          <h1 style={{ margin: "0 0 8px", fontSize: 28 }}>Đăng nhập</h1>
           <p className="muted" style={{ margin: "0 0 24px" }}>
-            Nhap email va mat khau de tiep tuc.
+            Nhập email và mật khẩu để tiếp tục.
           </p>
 
           {error && <div className="message error">{error}</div>}
@@ -70,7 +70,7 @@ function LoginContent() {
             </div>
 
             <div className="field">
-              <label htmlFor="login-password">Mat khau</label>
+              <label htmlFor="login-password">Mật khẩu</label>
               <input
                 id="login-password"
                 type="password"
@@ -78,20 +78,20 @@ function LoginContent() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="It nhat 6 ky tu"
+                placeholder="Ít nhất 6 ký tự"
                 autoComplete="current-password"
               />
             </div>
 
             <button type="submit" className="button" disabled={loading}>
-              {loading ? "Dang xu ly..." : "Dang nhap"}
+              {loading ? "Đang xử lý..." : "Đăng nhập"}
             </button>
           </form>
 
           <p style={{ marginTop: 20, textAlign: "center" }} className="muted">
-            Chua co tai khoan?{" "}
+            Chưa có tài khoản?{" "}
             <Link href="/register" style={{ color: "var(--primary)", fontWeight: 700 }}>
-              Dang ky ngay
+              Đăng ký ngay
             </Link>
           </p>
         </div>
@@ -102,7 +102,7 @@ function LoginContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="page-shell"><div className="message">Dang tai...</div></div>}>
+    <Suspense fallback={<div className="page-shell"><div className="message">Đang tải...</div></div>}>
       <LoginContent />
     </Suspense>
   );

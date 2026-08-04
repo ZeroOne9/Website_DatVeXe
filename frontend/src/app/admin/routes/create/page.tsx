@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
 import { adminService } from "@/services/adminService";
 
 export default function AdminCreateRoutePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
-
   const [locations, setLocations] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
@@ -35,7 +35,7 @@ export default function AdminCreateRoutePage() {
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,7 +52,7 @@ export default function AdminCreateRoutePage() {
 
     try {
       setLoading(true);
-      
+
       const payload = {
         departureLocationId: parseInt(formData.departureLocationId),
         destinationLocationId: parseInt(formData.destinationLocationId),
@@ -76,27 +76,37 @@ export default function AdminCreateRoutePage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", gap: 16 }}>
-        <Link href="/admin/routes" className="button outline" style={{ height: 32, padding: "0 12px" }}>
-          ← Quay lại
+      <div style={{ marginBottom: 24, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          <Link href="/admin/routes" className="button outline" style={{ height: 32, padding: "0 12px" }}>
+            ← Quay lại
+          </Link>
+          <h1 style={{ fontSize: 24, margin: 0 }}>Tạo Tuyến Xe Mới</h1>
+        </div>
+        <Link href="/admin/locations" className="button outline" style={{ height: 32, padding: "0 12px" }}>
+          + Thêm địa điểm
         </Link>
-        <h1 style={{ fontSize: 24, margin: 0 }}>Tạo Tuyến Xe Mới</h1>
       </div>
+
+      {locations.length === 0 && (
+        <div className="message" style={{ marginBottom: 20 }}>
+          Chưa có địa điểm nào. Hãy thêm địa điểm trước, sau đó quay lại tạo tuyến xe.
+        </div>
+      )}
 
       <div className="card" style={{ padding: 32, maxWidth: 600 }}>
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-          
           <div>
             <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Điểm xuất phát *</label>
-            <select 
-              className="input" 
-              name="departureLocationId" 
-              value={formData.departureLocationId} 
+            <select
+              className="input"
+              name="departureLocationId"
+              value={formData.departureLocationId}
               onChange={handleChange}
               required
             >
               <option value="">-- Chọn điểm xuất phát --</option>
-              {locations.map(loc => (
+              {locations.map((loc) => (
                 <option key={loc.id} value={loc.id}>
                   {loc.name} ({loc.province})
                 </option>
@@ -106,15 +116,15 @@ export default function AdminCreateRoutePage() {
 
           <div>
             <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Điểm đến *</label>
-            <select 
-              className="input" 
-              name="destinationLocationId" 
-              value={formData.destinationLocationId} 
+            <select
+              className="input"
+              name="destinationLocationId"
+              value={formData.destinationLocationId}
               onChange={handleChange}
               required
             >
               <option value="">-- Chọn điểm đến --</option>
-              {locations.map(loc => (
+              {locations.map((loc) => (
                 <option key={loc.id} value={loc.id}>
                   {loc.name} ({loc.province})
                 </option>
@@ -125,9 +135,9 @@ export default function AdminCreateRoutePage() {
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
             <div>
               <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Quãng đường (km)</label>
-              <input 
-                type="number" 
-                className="input" 
+              <input
+                type="number"
+                className="input"
                 name="distanceKm"
                 value={formData.distanceKm}
                 onChange={handleChange}
@@ -138,9 +148,9 @@ export default function AdminCreateRoutePage() {
             </div>
             <div>
               <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>Thời gian dự kiến (phút)</label>
-              <input 
-                type="number" 
-                className="input" 
+              <input
+                type="number"
+                className="input"
                 name="estimatedMinutes"
                 value={formData.estimatedMinutes}
                 onChange={handleChange}
@@ -151,11 +161,10 @@ export default function AdminCreateRoutePage() {
           </div>
 
           <div style={{ marginTop: 12 }}>
-            <button type="submit" className="button" disabled={loading} style={{ width: "100%" }}>
+            <button type="submit" className="button" disabled={loading || locations.length < 2} style={{ width: "100%" }}>
               {loading ? "Đang xử lý..." : "Lưu tuyến xe"}
             </button>
           </div>
-
         </form>
       </div>
     </div>

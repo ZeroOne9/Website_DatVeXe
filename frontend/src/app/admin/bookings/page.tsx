@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { adminService } from "@/services/adminService";
 import { formatMoney } from "@/lib/format";
 import type { BookingDetail } from "@/services/types";
@@ -9,6 +9,7 @@ export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<BookingDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const loadBookings = async () => {
     try {
@@ -40,7 +41,17 @@ export default function AdminBookingsPage() {
     }
   };
 
-  const filteredBookings = filter === "all" ? bookings : bookings.filter(b => b.status === filter);
+  const filteredBookings = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+
+    return bookings.filter((booking) => {
+      const route = booking.bookingSeats[0]?.trip?.route;
+      const seatCodes = booking.bookingSeats.map((bookingSeat) => bookingSeat.seat.seatCode).join(" ");
+      const searchable = `${booking.bookingCode} ${booking.passengerName} ${booking.passengerPhone} ${booking.passengerEmail || ""} ${route?.departureLocation.name || ""} ${route?.destinationLocation.name || ""} ${seatCodes}`.toLowerCase();
+
+      return (filter === "all" || booking.status === filter) && (!normalizedSearch || searchable.includes(normalizedSearch));
+    });
+  }, [bookings, filter, searchTerm]);
 
   const statusMap: Record<string, { text: string; color: string; bg: string }> = {
     pending: { text: "Chờ TT", color: "#b97700", bg: "#fff3cd" },
@@ -57,7 +68,14 @@ export default function AdminBookingsPage() {
       </div>
 
       <div className="card" style={{ padding: 20, marginBottom: 24 }}>
-        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <input
+            className="input"
+            style={{ width: 320, height: 40 }}
+            value={searchTerm}
+            onChange={(event) => setSearchTerm(event.target.value)}
+            placeholder="Tìm mã đơn, khách hàng, số điện thoại..."
+          />
           <strong style={{ marginRight: 8 }}>Lọc theo:</strong>
           <select 
             className="input" 
@@ -70,6 +88,16 @@ export default function AdminBookingsPage() {
             <option value="confirmed">Đã thanh toán</option>
             <option value="cancelled">Đã hủy</option>
           </select>
+          <button
+            className="button outline"
+            type="button"
+            onClick={() => {
+              setSearchTerm("");
+              setFilter("all");
+            }}
+          >
+            Xóa lọc
+          </button>
         </div>
       </div>
 

@@ -94,7 +94,7 @@ export default function AdminPartnerApplicationsPage() {
                     <div style={{ fontWeight: 500 }}>{app.phone}</div>
                     <div style={{ fontSize: 13, color: "var(--muted)" }}>{app.email || "---"}</div>
                     <div style={{ fontSize: 13, color: "var(--primary)", marginTop: 4 }}>
-                      TK: {app.accountEmail || "Chua co"}
+                      TK: {app.accountEmail || "Chưa có"}
                     </div>
                   </td>
                   <td>{new Date(app.createdAt).toLocaleDateString("vi-VN")}</td>

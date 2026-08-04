@@ -18,18 +18,19 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [user, loading, router]);
 
   if (loading || !user || user.role !== "admin") {
-    return <div style={{ padding: 40, textAlign: "center" }}>Dang kiem tra quyen truy cap...</div>;
+    return <div style={{ padding: 40, textAlign: "center" }}>Đang kiểm tra quyền truy cập...</div>;
   }
 
   const menuItems = [
-    { label: "Dashboard", href: "/admin", icon: "DB" },
-    { label: "Quan ly Booking", href: "/admin/bookings", icon: "BK" },
-    { label: "Quan ly Khach hang", href: "/admin/users", icon: "KH" },
-    { label: "Quan ly Chuyen xe", href: "/admin/trips", icon: "CX" },
-    { label: "Quan ly Tuyen xe", href: "/admin/routes", icon: "TX" },
-    { label: "Duyet Ho so", href: "/admin/partner-applications", icon: "HS" },
-    { label: "Quan ly Nha xe", href: "/admin/bus-companies", icon: "NX" },
-    { label: "Quan ly Xe & Ghe", href: "/admin/vehicles", icon: "XG" },
+    { label: "Dashboard", href: "/admin" },
+    { label: "Quản lý Booking", href: "/admin/bookings" },
+    { label: "Quản lý Khách hàng", href: "/admin/users" },
+    { label: "Quản lý Chuyến xe", href: "/admin/trips" },
+    { label: "Quản lý Địa điểm", href: "/admin/locations" },
+    { label: "Quản lý Tuyến xe", href: "/admin/routes" },
+    { label: "Duyệt Hồ sơ", href: "/admin/partner-applications" },
+    { label: "Quản lý Nhà xe", href: "/admin/bus-companies" },
+    { label: "Quản lý Xe & Ghế", href: "/admin/vehicles" },
   ];
 
   return (
@@ -47,7 +48,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.href}
                 className={`admin-sidebar-link ${isActive ? "active" : ""}`}
               >
-                <span>{item.icon}</span> {item.label}
+                <span>{item.label}</span>
               </Link>
             );
           })}
@@ -58,10 +59,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <header className="admin-header">
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             <span style={{ fontSize: 14 }}>
-              Xin chao, <strong>{user.fullName}</strong>
+              Xin chào, <strong>{user.fullName}</strong>
             </span>
             <button className="button outline" style={{ height: 32, fontSize: 13 }} onClick={logout}>
-              Dang xuat
+              Đăng xuất
             </button>
           </div>
         </header>

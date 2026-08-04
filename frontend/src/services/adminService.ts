@@ -54,6 +54,18 @@ export const adminService = {
     return apiClient.get<{ locations: any[] }>("/api/admin/locations");
   },
 
+  createLocation(data: any) {
+    return apiClient.post<{ location: any }>("/api/admin/locations", data);
+  },
+
+  updateLocation(locationId: number, data: any) {
+    return apiClient.patch<{ location: any }>(`/api/admin/locations/${locationId}`, data);
+  },
+
+  deleteLocation(locationId: number) {
+    return apiClient.delete<{ location: { id: number } }>(`/api/admin/locations/${locationId}`);
+  },
+
   getVehicles() {
     return apiClient.get<{ vehicles: any[] }>("/api/admin/vehicles");
   },
@@ -80,6 +92,14 @@ export const adminService = {
 
   createBusCompany(data: any) {
     return apiClient.post<{ busCompany: any }>("/api/admin/bus-companies", data);
+  },
+
+  updateBusCompany(busCompanyId: number, data: any) {
+    return apiClient.patch<{ busCompany: any }>(`/api/admin/bus-companies/${busCompanyId}`, data);
+  },
+
+  deleteBusCompany(busCompanyId: number) {
+    return apiClient.delete<{ busCompany: { id: number } }>(`/api/admin/bus-companies/${busCompanyId}`);
   },
 
   getVehicleSeats(vehicleId: number) {

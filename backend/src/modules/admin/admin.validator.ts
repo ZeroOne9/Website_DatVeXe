@@ -25,6 +25,10 @@ export const createLocationSchema = z.object({
   ),
 });
 
+export const updateLocationSchema = createLocationSchema.partial().refine((data) => Object.keys(data).length > 0, {
+  message: "Can it nhat mot truong de cap nhat.",
+});
+
 export const createRouteSchema = z
   .object({
     departureLocationId: idSchema,
@@ -78,6 +82,10 @@ export const createBusCompanySchema = z.object({
     (value) => (value === "" ? undefined : value),
     z.string().trim().optional(),
   ),
+});
+
+export const updateBusCompanySchema = createBusCompanySchema.partial().refine((data) => Object.keys(data).length > 0, {
+  message: "Can it nhat mot truong de cap nhat.",
 });
 
 export const createVehicleSchema = z.object({
@@ -227,9 +235,11 @@ export const listPartnerApplicationsQuerySchema = z.object({
 });
 
 export type CreateLocationInput = z.infer<typeof createLocationSchema>;
+export type UpdateLocationInput = z.infer<typeof updateLocationSchema>;
 export type CreateRouteInput = z.infer<typeof createRouteSchema>;
 export type CreateTripInput = z.infer<typeof createTripSchema>;
 export type CreateBusCompanyInput = z.infer<typeof createBusCompanySchema>;
+export type UpdateBusCompanyInput = z.infer<typeof updateBusCompanySchema>;
 export type CreateVehicleInput = z.infer<typeof createVehicleSchema>;
 export type VehicleIdParamInput = z.infer<typeof vehicleIdParamSchema>;
 export type CreateSeatInput = z.infer<typeof createSeatSchema>;

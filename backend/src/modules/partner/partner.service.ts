@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/errors";
+import { assertVehicleTripSchedule } from "@/modules/trips/trip-schedule.service";
 
 import type {
   CreatePartnerSeatInput,
@@ -395,6 +396,14 @@ export async function createPartnerTrip(scope: PartnerScope, input: CreatePartne
   if (vehicle.status !== "active") {
     throw new ApiError("Xe khong san sang hoat dong.", 409);
   }
+
+  await assertVehicleTripSchedule(prisma, {
+    routeId: input.routeId,
+    vehicleId: input.vehicleId,
+    departureTime: new Date(input.departureTime),
+    arrivalTime: input.arrivalTime ? new Date(input.arrivalTime) : null,
+    status: input.status ?? "scheduled",
+  });
 
   return prisma.trip.create({
     data: {

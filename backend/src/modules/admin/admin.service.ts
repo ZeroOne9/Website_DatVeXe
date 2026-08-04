@@ -2,6 +2,7 @@ import { Prisma } from "@prisma/client";
 
 import { ApiError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
+import { assertVehicleTripSchedule } from "@/modules/trips/trip-schedule.service";
 
 import type {
   CreateBusCompanyInput,
@@ -12,7 +13,9 @@ import type {
   CreateVehicleInput,
   ListUsersQueryInput,
   ListPartnerApplicationsQueryInput,
+  UpdateLocationInput,
   UpdateRouteInput,
+  UpdateBusCompanyInput,
   UpdateRouteStatusInput,
   UpdateTripInput,
   UpdateTripStatusInput,
@@ -74,6 +77,14 @@ const adminUserSelect = {
 export function listAdminLocations() {
   return prisma.location.findMany({
     orderBy: [{ province: "asc" }, { name: "asc" }],
+    include: {
+      _count: {
+        select: {
+          departureRoutes: true,
+          destinationRoutes: true,
+        },
+      },
+    },
   });
 }
 
@@ -81,6 +92,14 @@ export async function createAdminLocation(input: CreateLocationInput) {
   try {
     return await prisma.location.create({
       data: input,
+      include: {
+        _count: {
+          select: {
+            departureRoutes: true,
+            destinationRoutes: true,
+          },
+        },
+      },
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
@@ -89,6 +108,68 @@ export async function createAdminLocation(input: CreateLocationInput) {
 
     throw error;
   }
+}
+
+export async function updateAdminLocation(locationId: number, input: UpdateLocationInput) {
+  const location = await prisma.location.findUnique({
+    where: { id: locationId },
+    select: { id: true },
+  });
+
+  if (!location) {
+    throw new ApiError("Dia diem khong ton tai.", 404);
+  }
+
+  try {
+    return await prisma.location.update({
+      where: { id: locationId },
+      data: input,
+      include: {
+        _count: {
+          select: {
+            departureRoutes: true,
+            destinationRoutes: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ApiError("Dia diem nay da ton tai.", 409);
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteAdminLocation(locationId: number) {
+  const location = await prisma.location.findUnique({
+    where: { id: locationId },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          departureRoutes: true,
+          destinationRoutes: true,
+        },
+      },
+    },
+  });
+
+  if (!location) {
+    throw new ApiError("Dia diem khong ton tai.", 404);
+  }
+
+  const routeCount = location._count.departureRoutes + location._count.destinationRoutes;
+  if (routeCount > 0) {
+    throw new ApiError("Khong the xoa dia diem da duoc su dung trong tuyen xe.", 409);
+  }
+
+  await prisma.location.delete({
+    where: { id: locationId },
+  });
+
+  return { id: locationId };
 }
 
 export function listAdminRoutes() {
@@ -180,6 +261,14 @@ export async function createAdminTrip(input: CreateTripInput) {
   if (vehicle.status !== "active") {
     throw new ApiError("Xe khong san sang hoat dong.", 409);
   }
+
+  await assertVehicleTripSchedule(prisma, {
+    routeId: input.routeId,
+    vehicleId: input.vehicleId,
+    departureTime: new Date(input.departureTime),
+    arrivalTime: input.arrivalTime ? new Date(input.arrivalTime) : null,
+    status: input.status ?? "scheduled",
+  });
 
   return prisma.trip.create({
     data: {
@@ -366,6 +455,65 @@ export async function createAdminBusCompany(input: CreateBusCompanyInput) {
 
     throw error;
   }
+}
+
+export async function updateAdminBusCompany(busCompanyId: number, input: UpdateBusCompanyInput) {
+  const busCompany = await prisma.busCompany.findUnique({
+    where: { id: busCompanyId },
+    select: { id: true },
+  });
+
+  if (!busCompany) {
+    throw new ApiError("Nha xe khong ton tai.", 404);
+  }
+
+  try {
+    return await prisma.busCompany.update({
+      where: { id: busCompanyId },
+      data: input,
+      include: {
+        _count: {
+          select: {
+            vehicles: true,
+          },
+        },
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      throw new ApiError("Nha xe nay da ton tai.", 409);
+    }
+
+    throw error;
+  }
+}
+
+export async function deleteAdminBusCompany(busCompanyId: number) {
+  const busCompany = await prisma.busCompany.findUnique({
+    where: { id: busCompanyId },
+    select: {
+      id: true,
+      _count: {
+        select: {
+          vehicles: true,
+        },
+      },
+    },
+  });
+
+  if (!busCompany) {
+    throw new ApiError("Nha xe khong ton tai.", 404);
+  }
+
+  if (busCompany._count.vehicles > 0) {
+    throw new ApiError("Khong the xoa nha xe da co xe. Hay cap nhat thong tin nha xe thay vi xoa.", 409);
+  }
+
+  await prisma.busCompany.delete({
+    where: { id: busCompanyId },
+  });
+
+  return { id: busCompanyId };
 }
 
 export function listAdminVehicles() {
@@ -773,6 +921,15 @@ export async function updateAdminTrip(tripId: number, input: UpdateTripInput) {
     if (nextArrivalTime && nextArrivalTime <= nextDepartureTime) {
       throw new ApiError("Thoi gian den phai sau thoi gian khoi hanh.", 400);
     }
+
+    await assertVehicleTripSchedule(tx, {
+      routeId: input.routeId ?? trip.routeId,
+      vehicleId: input.vehicleId ?? trip.vehicleId,
+      departureTime: nextDepartureTime,
+      arrivalTime: nextArrivalTime,
+      status: input.status ?? trip.status,
+      excludeTripId: tripId,
+    });
 
     if (input.status === "cancelled" && trip.status !== "cancelled") {
       await tx.booking.updateMany({
