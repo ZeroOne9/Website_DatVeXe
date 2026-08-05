@@ -1,9 +1,9 @@
 # Website Ho Tro Dat Ve Xe
 
-Du an duoc tach thanh 2 ung dung rieng:
+
 
 ```txt
-Website_HoTroDatVeXe-master/
+Website_DatVeXe/
   backend/
   frontend/
 ```
@@ -80,6 +80,7 @@ Khach hang demo:
 Email: passenger.demo@datvexe.local
 Password: 123456
 ```
+Hoặc có thể tạo tài khoản mới.
 
 ## Flow Test Co Ban
 
