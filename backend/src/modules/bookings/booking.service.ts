@@ -78,6 +78,7 @@ const tripDetailSelect = {
     select: {
       id: true,
       name: true,
+      licensePlate: true,
       vehicleType: true,
       busCompany: {
         select: {

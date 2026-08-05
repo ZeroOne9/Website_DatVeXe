@@ -23,6 +23,7 @@ export type TripSearchItem = {
   vehicle: {
     id: number;
     name: string;
+    licensePlate: string;
     vehicleType: string;
     capacity?: number;
     busCompany: {
@@ -49,6 +50,7 @@ export type TripDetailItem = {
   vehicle: {
     id: number;
     name: string;
+    licensePlate: string;
     vehicleType: string;
     capacity?: number;
     busCompany: {

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -187,6 +187,9 @@ export default function MyTicketsPage() {
                           </div>
                           <div>
                             Ghế ({booking.bookingSeats?.length || 0}): <strong style={{color: "var(--text)"}}>{booking.bookingSeats?.map(s => s.seat.seatCode).join(", ")}</strong>
+                          </div>
+                          <div>
+                            Biển số xe: <strong style={{color: "var(--text)"}}>{firstSeat?.trip.vehicle.licensePlate || "---"}</strong>
                           </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>

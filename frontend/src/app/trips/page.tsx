@@ -139,6 +139,7 @@ function InlineSeatPicker({
             <div className="selected-summary">
               <div>Ghế đã chọn:</div>
               <strong className="selected-code">{selectedSeats.map((seat) => seat.seatCode).join(", ")}</strong>
+              
             </div>
           )}
         </div>

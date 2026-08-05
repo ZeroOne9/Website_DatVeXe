@@ -114,6 +114,7 @@ export async function searchTrips(input: TripSearchInput) {
         select: {
           id: true,
           name: true,
+          licensePlate: true,
           vehicleType: true,
           capacity: true,
           busCompany: {
@@ -162,6 +163,7 @@ export async function searchTrips(input: TripSearchInput) {
       vehicle: {
         id: trip.vehicle.id,
         name: trip.vehicle.name,
+        licensePlate: trip.vehicle.licensePlate,
         vehicleType: trip.vehicle.vehicleType,
         capacity: trip.vehicle.capacity,
         busCompany: trip.vehicle.busCompany,
@@ -202,6 +204,7 @@ export async function getTripSeats(tripId: number) {
         select: {
           id: true,
           name: true,
+          licensePlate: true,
           vehicleType: true,
           capacity: true,
           seats: {
@@ -273,6 +276,7 @@ export async function getTripSeats(tripId: number) {
       vehicle: {
         id: trip.vehicle.id,
         name: trip.vehicle.name,
+        licensePlate: trip.vehicle.licensePlate,
         vehicleType: trip.vehicle.vehicleType,
         capacity: trip.vehicle.capacity,
         busCompany: trip.vehicle.busCompany,

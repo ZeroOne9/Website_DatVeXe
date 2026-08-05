@@ -44,7 +44,7 @@ export default function SeatSelectionPage() {
       }
 
       if (current.length >= 6) {
-        alert("Chá»‰ Ä‘Æ°á»£c chá»n tá»‘i Ä‘a 6 gháº¿");
+        alert("Chỉ được chọn tối đa 6 ghế");
         return current;
       }
 
