@@ -1,6 +1,7 @@
 import { ApiError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 
+import { markDepartedTrips } from "./trip-status.service";
 import type { TripSearchInput } from "./trip.validator";
 
 function getDateRange(date: string) {
@@ -61,6 +62,8 @@ function getLocationWhere(label: string | undefined, locationId: number) {
 }
 
 export async function searchTrips(input: TripSearchInput) {
+  await markDepartedTrips();
+
   const dateRange = input.date ? getDateRange(input.date) : null;
 
   const trips = await prisma.trip.findMany({

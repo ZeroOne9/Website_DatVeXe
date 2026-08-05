@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { formatMoney } from "@/lib/format";
+import { getPassengerLocationLabel, normalizeText } from "@/lib/locations";
 import { locationService } from "@/services/locationService";
 import { tripService } from "@/services/tripService";
 import type { LocationItem, SeatItem, TripSearchItem } from "@/services/types";
@@ -24,13 +25,6 @@ function minutesToTime(minutes: number) {
   const hour = Math.floor(minutes / 60);
   const minute = minutes % 60;
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-function normalizeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
 }
 
 function matchesVehicleType(vehicleType: string, selected: VehicleTypeFilter[]) {
@@ -66,23 +60,6 @@ function toggleItem(value: string, setter: React.Dispatch<React.SetStateAction<s
 
 function today() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function getPassengerLocationLabel(location: LocationItem) {
-  const normalizedName = normalizeText(location.name);
-  const normalizedProvince = normalizeText(location.province);
-
-  if (normalizedName.includes("da lat")) return "Đà Lạt";
-  if (normalizedName.includes("nha trang")) return "Nha Trang";
-  if (normalizedName.includes("vung tau")) return "Vũng Tàu";
-  if (normalizedName.includes("phan thiet")) return "Phan Thiết";
-  if (normalizedName.includes("mien dong")) return "TP. Hồ Chí Minh";
-  if (normalizedName.includes("mien tay")) return "TP. Hồ Chí Minh";
-  if (normalizedProvince.includes("ha noi")) return "Hà Nội";
-  if (normalizedProvince.includes("da nang")) return "Đà Nẵng";
-  if (normalizedProvince.includes("hue") || normalizedProvince.includes("thua thien")) return "Huế";
-
-  return location.province;
 }
 
 function InlineSeatPicker({

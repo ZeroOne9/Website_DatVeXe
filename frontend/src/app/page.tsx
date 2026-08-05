@@ -2,39 +2,47 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { getPassengerLocationLabel, normalizeText } from "@/lib/locations";
 import { locationService } from "@/services/locationService";
 import type { LocationItem } from "@/services/types";
+
+type PopularRoute = {
+  from: string;
+  to: string;
+  price: string;
+  departureLabel: string;
+  destinationLabel: string;
+  img: string;
+};
+
+const popularRouteGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+  gap: 20,
+};
+
+const popularRouteCardStyle: React.CSSProperties = {
+  border: 0,
+  padding: 0,
+  textAlign: "left",
+  borderRadius: 8,
+  overflow: "hidden",
+  boxShadow: "var(--shadow)",
+  background: "white",
+};
+
+const popularRouteImageStyle: React.CSSProperties = {
+  width: "100%",
+  height: 160,
+  objectFit: "cover",
+  background: "linear-gradient(135deg, #e8f1fd, #cfe2ff)",
+};
 
 function today() {
   return new Date().toISOString().slice(0, 10);
 }
 
-function normalizeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function getPassengerLocationLabel(location: LocationItem) {
-  const normalizedName = normalizeText(location.name);
-  const normalizedProvince = normalizeText(location.province);
-
-  if (normalizedName.includes("da lat")) return "Đà Lạt";
-  if (normalizedName.includes("nha trang")) return "Nha Trang";
-  if (normalizedName.includes("vung tau")) return "Vũng Tàu";
-  if (normalizedName.includes("phan thiet")) return "Phan Thiết";
-  if (normalizedName.includes("mien dong")) return "TP. Hồ Chí Minh";
-  if (normalizedName.includes("mien tay")) return "TP. Hồ Chí Minh";
-  if (normalizedProvince.includes("ha noi")) return "Hà Nội";
-  if (normalizedProvince.includes("da nang")) return "Đà Nẵng";
-  if (normalizedProvince.includes("hue") || normalizedProvince.includes("thua thien")) return "Huế";
-  if (normalizedProvince.includes("can tho")) return "Cần Thơ";
-
-  return location.province;
-}
-
-const popularRoutes = [
+const popularRoutes: PopularRoute[] = [
   {
     from: "TP. Hồ Chí Minh",
     to: "Đà Lạt",
@@ -178,7 +186,7 @@ export default function HomePage() {
     goToTrips(departureLocationId, destinationLocationId, date);
   }
 
-  function handlePopularRouteClick(route: (typeof popularRoutes)[number]) {
+  function handlePopularRouteClick(route: PopularRoute) {
     const departure = passengerLocations.find(
       (location) => normalizeText(getPassengerLocationLabel(location)) === normalizeText(route.departureLabel),
     );
@@ -281,37 +289,28 @@ export default function HomePage() {
 
       <div className="page-shell">
         <h2 style={{ marginTop: "40px", marginBottom: "20px" }}>Tuyến đường phổ biến</h2>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: "20px" }}>
+        <div style={popularRouteGridStyle}>
           {popularRoutes.map((route, index) => (
             <button
               key={index}
               type="button"
               onClick={() => handlePopularRouteClick(route)}
               disabled={loading}
-              style={{
-                border: 0,
-                padding: 0,
-                textAlign: "left",
-                cursor: loading ? "not-allowed" : "pointer",
-                borderRadius: "8px",
-                overflow: "hidden",
-                boxShadow: "var(--shadow)",
-                background: "white",
-              }}
+              style={{ ...popularRouteCardStyle, cursor: loading ? "not-allowed" : "pointer" }}
             >
               <img
                 src={route.img}
                 alt={route.to}
-                style={{ width: "100%", height: "160px", objectFit: "cover", background: "linear-gradient(135deg, #e8f1fd, #cfe2ff)" }}
+                style={popularRouteImageStyle}
                 onError={(event) => {
                   event.currentTarget.style.display = "none";
                 }}
               />
-              <div style={{ padding: "16px" }}>
-                <div style={{ fontWeight: 700, marginBottom: "8px" }}>
+              <div style={{ padding: 16 }}>
+                <div style={{ fontWeight: 700, marginBottom: 8 }}>
                   {route.from} - {route.to}
                 </div>
-                <div style={{ color: "var(--muted)", fontSize: "14px" }}>Từ {route.price}</div>
+                <div style={{ color: "var(--muted)", fontSize: 14 }}>Từ {route.price}</div>
               </div>
             </button>
           ))}

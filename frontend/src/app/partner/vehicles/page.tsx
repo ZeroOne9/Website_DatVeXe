@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { getAutoSeatType } from "@/lib/vehicleSeats";
 import { partnerDashboardService } from "@/services/partnerDashboardService";
 
 const inputStyle: React.CSSProperties = {
@@ -43,15 +44,6 @@ const emptyVehicleForm: VehicleForm = {
   capacity: "",
   status: "active",
 };
-
-function isSleeperVehicle(vehicleType?: string) {
-  const normalized = (vehicleType || "").toLowerCase();
-  return normalized.includes("giường") || normalized.includes("giuong") || normalized.includes("sleeper");
-}
-
-function getAutoSeatType(vehicle: any) {
-  return isSleeperVehicle(vehicle?.vehicleType) ? "sleeper" : "standard";
-}
 
 function FieldLabel({
   label,
@@ -290,7 +282,7 @@ export default function PartnerVehiclesPage() {
     try {
       await partnerDashboardService.createVehicleSeat(Number(seatForm.vehicleId), {
         seatCode: seatForm.seatCode.trim(),
-        seatType: isSleeperVehicle(selectedVehicle?.vehicleType) ? "sleeper" : seatForm.seatType,
+        seatType: getAutoSeatType(selectedVehicle) === "sleeper" ? "sleeper" : seatForm.seatType,
         floor: Number(seatForm.floor),
         rowNumber: seatForm.rowNumber ? Number(seatForm.rowNumber) : undefined,
         colNumber: seatForm.colNumber ? Number(seatForm.colNumber) : undefined,

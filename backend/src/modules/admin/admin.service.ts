@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { ApiError } from "@/lib/errors";
 import { prisma } from "@/lib/prisma";
 import { assertVehicleTripSchedule } from "@/modules/trips/trip-schedule.service";
+import { markDepartedTrips } from "@/modules/trips/trip-status.service";
 
 import type {
   CreateBusCompanyInput,
@@ -225,7 +226,9 @@ export async function createAdminRoute(input: CreateRouteInput) {
   }
 }
 
-export function listAdminTrips() {
+export async function listAdminTrips() {
+  await markDepartedTrips();
+
   return prisma.trip.findMany({
     orderBy: {
       departureTime: "desc",

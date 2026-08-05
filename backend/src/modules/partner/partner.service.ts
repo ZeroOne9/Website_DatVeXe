@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ApiError } from "@/lib/errors";
 import { assertVehicleTripSchedule } from "@/modules/trips/trip-schedule.service";
+import { markDepartedTrips } from "@/modules/trips/trip-status.service";
 
 import type {
   CreatePartnerSeatInput,
@@ -328,7 +329,9 @@ export async function createPartnerVehicleSeat(
   }
 }
 
-export function listPartnerTrips(scope: PartnerScope) {
+export async function listPartnerTrips(scope: PartnerScope) {
+  await markDepartedTrips();
+
   return prisma.trip.findMany({
     where: partnerTripWhere(scope.busCompanyIds),
     orderBy: { departureTime: "desc" },

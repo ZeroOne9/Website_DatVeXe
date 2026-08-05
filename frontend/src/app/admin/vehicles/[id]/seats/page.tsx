@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { getAutoSeatType, getSeatTypeLabel } from "@/lib/vehicleSeats";
 import { adminService } from "@/services/adminService";
 
 const inputStyle: React.CSSProperties = {
@@ -20,28 +21,6 @@ const helpTextStyle: React.CSSProperties = {
   fontSize: 12,
   lineHeight: 1.5,
 };
-
-function normalizeText(value?: string) {
-  return (value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase();
-}
-
-function isSleeperVehicle(vehicleType?: string) {
-  const normalized = normalizeText(vehicleType);
-  return normalized.includes("giuong") || normalized.includes("sleeper");
-}
-
-function getAutoSeatType(vehicle: any) {
-  return isSleeperVehicle(vehicle?.vehicleType) ? "sleeper" : "standard";
-}
-
-function getSeatTypeLabel(seatType: string) {
-  if (seatType === "sleeper") return "Giường nằm";
-  if (seatType === "vip") return "Ghế VIP";
-  return "Ghế thường";
-}
 
 function FieldLabel({
   label,

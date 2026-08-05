@@ -1,6 +1,8 @@
 import { apiClient } from "@/services/apiClient";
 import type { BookingDetail } from "@/services/types";
 
+type MutationPayload = Record<string, unknown>;
+
 export const adminService = {
   getBookings() {
     return apiClient.get<{ bookings: BookingDetail[] }>("/api/admin/bookings");
@@ -14,7 +16,7 @@ export const adminService = {
     return apiClient.get<{ trips: any[] }>("/api/admin/trips");
   },
 
-  createTrip(data: any) {
+  createTrip(data: MutationPayload) {
     return apiClient.post<{ trip: any }>("/api/admin/trips", data);
   },
 
@@ -22,7 +24,7 @@ export const adminService = {
     return apiClient.patch<{ trip: any }>(`/api/admin/trips/${tripId}`, { status });
   },
 
-  updateTrip(tripId: number, data: any) {
+  updateTrip(tripId: number, data: MutationPayload) {
     return apiClient.patch<{ trip: any }>(`/api/admin/trips/${tripId}`, data);
   },
 
@@ -34,7 +36,7 @@ export const adminService = {
     return apiClient.get<{ routes: any[] }>("/api/admin/routes");
   },
 
-  createRoute(data: any) {
+  createRoute(data: MutationPayload) {
     return apiClient.post<{ route: any }>("/api/admin/routes", data);
   },
 
@@ -42,7 +44,7 @@ export const adminService = {
     return apiClient.patch<{ route: any }>(`/api/admin/routes/${routeId}`, { status });
   },
 
-  updateRoute(routeId: number, data: any) {
+  updateRoute(routeId: number, data: MutationPayload) {
     return apiClient.patch<{ route: any }>(`/api/admin/routes/${routeId}`, data);
   },
 
@@ -54,11 +56,11 @@ export const adminService = {
     return apiClient.get<{ locations: any[] }>("/api/admin/locations");
   },
 
-  createLocation(data: any) {
+  createLocation(data: MutationPayload) {
     return apiClient.post<{ location: any }>("/api/admin/locations", data);
   },
 
-  updateLocation(locationId: number, data: any) {
+  updateLocation(locationId: number, data: MutationPayload) {
     return apiClient.patch<{ location: any }>(`/api/admin/locations/${locationId}`, data);
   },
 
@@ -70,7 +72,7 @@ export const adminService = {
     return apiClient.get<{ vehicles: any[] }>("/api/admin/vehicles");
   },
 
-  createVehicle(data: any) {
+  createVehicle(data: MutationPayload) {
     return apiClient.post<{ vehicle: any }>("/api/admin/vehicles", data);
   },
 
@@ -78,7 +80,7 @@ export const adminService = {
     return apiClient.patch<{ vehicle: any }>(`/api/admin/vehicles/${vehicleId}`, { status });
   },
 
-  updateVehicle(vehicleId: number, data: any) {
+  updateVehicle(vehicleId: number, data: MutationPayload) {
     return apiClient.patch<{ vehicle: any }>(`/api/admin/vehicles/${vehicleId}`, data);
   },
 
@@ -90,11 +92,11 @@ export const adminService = {
     return apiClient.get<{ busCompanies: any[] }>("/api/admin/bus-companies");
   },
 
-  createBusCompany(data: any) {
+  createBusCompany(data: MutationPayload) {
     return apiClient.post<{ busCompany: any }>("/api/admin/bus-companies", data);
   },
 
-  updateBusCompany(busCompanyId: number, data: any) {
+  updateBusCompany(busCompanyId: number, data: MutationPayload) {
     return apiClient.patch<{ busCompany: any }>(`/api/admin/bus-companies/${busCompanyId}`, data);
   },
 
@@ -106,7 +108,7 @@ export const adminService = {
     return apiClient.get<{ vehicle: any }>(`/api/admin/vehicles/${vehicleId}/seats`);
   },
 
-  createVehicleSeat(vehicleId: number, data: any) {
+  createVehicleSeat(vehicleId: number, data: MutationPayload) {
     return apiClient.post<{ seat: any }>(`/api/admin/vehicles/${vehicleId}/seats`, data);
   },
 
@@ -132,7 +134,7 @@ export const adminService = {
     return apiClient.get<{ users: any[] }>(`/api/admin/users${query}`);
   },
 
-  updateUser(userId: number, data: any) {
+  updateUser(userId: number, data: MutationPayload) {
     return apiClient.patch<{ user: any }>(`/api/admin/users/${userId}`, data);
   },
 
